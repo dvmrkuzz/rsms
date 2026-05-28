@@ -1,0 +1,16 @@
+{
+  "name": "rsms",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "apps/*",
+    "shared"
+  ],
+  "scripts": {
+    "backend": "npm run start:dev -w backend",
+    "dashboard": "npm run dev -w dashboard",
+    "kiosk": "npm run dev -w kiosk",
+    "asksorsu": "npm run dev -w asksorsu"
+  }
+}
