@@ -9,6 +9,7 @@ import { VisitorLog } from './database/entities/visitor-log.entity';
 import { AuditLog } from './database/entities/audit-log.entity';
 import { Inquiry } from './database/entities/inquiry.entity';
 import { Announcement } from './database/entities/announcement.entity';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -29,13 +30,8 @@ import { Announcement } from './database/entities/announcement.entity';
         password: config.get('database.password'),
         database: config.get('database.name'),
         entities: [
-          User,
-          DocumentType,
-          ServiceRequest,
-          VisitorLog,
-          AuditLog,
-          Inquiry,
-          Announcement,
+          User, DocumentType, ServiceRequest,
+          VisitorLog, AuditLog, Inquiry, Announcement,
         ],
         migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
         synchronize: false,
@@ -43,6 +39,8 @@ import { Announcement } from './database/entities/announcement.entity';
         ssl: false,
       }),
     }),
+
+    AuthModule,
   ],
 })
 export class AppModule {}
