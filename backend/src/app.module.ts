@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import appConfig from './config/app.config';
 import { User } from './database/entities/user.entity';
 import { DocumentType } from './database/entities/document-type.entity';
@@ -11,6 +12,8 @@ import { Inquiry } from './database/entities/inquiry.entity';
 import { Announcement } from './database/entities/announcement.entity';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { AuditModule } from './modules/audit/audit.module';
+import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 
 @Module({
   imports: [
@@ -21,7 +24,7 @@ import { UsersModule } from './modules/users/users.module';
     }),
 
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule, AuthModule, UsersModule],
+      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
@@ -41,7 +44,15 @@ import { UsersModule } from './modules/users/users.module';
       }),
     }),
 
+    AuditModule,
     AuthModule,
+    UsersModule,
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor,
+    },
   ],
 })
 export class AppModule {}
