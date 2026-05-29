@@ -10,6 +10,7 @@ import { AuditLog } from './database/entities/audit-log.entity';
 import { Inquiry } from './database/entities/inquiry.entity';
 import { Announcement } from './database/entities/announcement.entity';
 import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { AuthModule } from './modules/auth/auth.module';
     }),
 
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
+      imports: [ConfigModule, AuthModule, UsersModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
