@@ -14,6 +14,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { ServicesModule } from './modules/services/services.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
     AuditModule,
     AuthModule,
     UsersModule,
+    ServicesModule,
   ],
   providers: [
     {
