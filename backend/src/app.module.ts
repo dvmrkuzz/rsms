@@ -13,8 +13,11 @@ import { Announcement } from './database/entities/announcement.entity';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuditModule } from './modules/audit/audit.module';
-import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { ServicesModule } from './modules/services/services.module';
+import { VisitorsModule } from './modules/visitors/visitors.module';
+import { InquiryModule } from './modules/inquiry/inquiry.module';
+import { AnnouncementsModule } from './modules/announcements/announcements.module';
+import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 
 @Module({
   imports: [
@@ -23,7 +26,6 @@ import { ServicesModule } from './modules/services/services.module';
       load: [appConfig],
       envFilePath: '.env',
     }),
-
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -44,11 +46,13 @@ import { ServicesModule } from './modules/services/services.module';
         ssl: false,
       }),
     }),
-
     AuditModule,
     AuthModule,
     UsersModule,
     ServicesModule,
+    VisitorsModule,
+    InquiryModule,
+    AnnouncementsModule,
   ],
   providers: [
     {
