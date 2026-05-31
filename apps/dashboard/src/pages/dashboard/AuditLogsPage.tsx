@@ -1,0 +1,125 @@
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { Shield } from 'lucide-react'
+import api from '../../lib/api'
+
+const ACTION_COLORS: Record<string, string> = {
+  create: 'bg-green-100 text-green-700',
+  update: 'bg-blue-100 text-blue-700',
+  delete: 'bg-red-100 text-red-700',
+  login: 'bg-purple-100 text-purple-700',
+  logout: 'bg-gray-100 text-gray-600',
+  approve: 'bg-teal-100 text-teal-700',
+  reject: 'bg-red-100 text-red-700',
+  release: 'bg-green-100 text-green-700',
+  export: 'bg-amber-100 text-amber-700',
+}
+
+export default function AuditLogsPage() {
+  const [page, setPage] = useState(1)
+  const [actionFilter, setActionFilter] = useState('')
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['audit-logs', page, actionFilter],
+    queryFn: () =>
+      api.get('/audit', {
+        params: { page, limit: 20, ...(actionFilter && { action: actionFilter }) },
+      }).then(r => r.data),
+  })
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center gap-3">
+        <Shield className="w-6 h-6 text-gray-600" />
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Audit Logs</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Complete system activity trail</p>
+        </div>
+      </div>
+
+      {/* Filter */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex gap-2 flex-wrap">
+        {['', 'create', 'update', 'delete', 'login', 'approve', 'reject', 'release'].map(action => (
+          <button
+            key={action}
+            onClick={() => { setActionFilter(action); setPage(1) }}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+              actionFilter === action
+                ? 'bg-blue-700 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            {action === '' ? 'All Actions' : action.charAt(0).toUpperCase() + action.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th className="text-left px-5 py-3 font-medium text-gray-600">Timestamp</th>
+              <th className="text-left px-5 py-3 font-medium text-gray-600">User</th>
+              <th className="text-left px-5 py-3 font-medium text-gray-600">Action</th>
+              <th className="text-left px-5 py-3 font-medium text-gray-600">Entity</th>
+              <th className="text-left px-5 py-3 font-medium text-gray-600">Description</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {isLoading ? (
+              <tr><td colSpan={5} className="text-center py-10 text-gray-400">Loading...</td></tr>
+            ) : data?.data?.length === 0 ? (
+              <tr><td colSpan={5} className="text-center py-10 text-gray-400">No audit logs found</td></tr>
+            ) : (
+              data?.data?.map((log: any) => (
+                <tr key={log.id} className="hover:bg-gray-50">
+                  <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">
+                    {new Date(log.createdAt).toLocaleString()}
+                  </td>
+                  <td className="px-5 py-3 text-gray-700">
+                    {log.user
+                      ? `${log.user.firstName} ${log.user.lastName}`
+                      : <span className="text-gray-400 text-xs">System</span>
+                    }
+                  </td>
+                  <td className="px-5 py-3">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                      ACTION_COLORS[log.action] ?? 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {log.action}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3 text-gray-600 capitalize text-xs">
+                    {log.entityName?.replace('_', ' ')}
+                  </td>
+                  <td className="px-5 py-3 text-gray-500 text-xs max-w-xs truncate">
+                    {log.description}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+
+        {data && data.totalPages > 1 && (
+          <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
+            <span>Page {page} of {data.totalPages} — {data.total} total entries</span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1 border rounded-lg disabled:opacity-40 hover:bg-gray-50"
+              >Previous</button>
+              <button
+                onClick={() => setPage(p => Math.min(data.totalPages, p + 1))}
+                disabled={page === data.totalPages}
+                className="px-3 py-1 border rounded-lg disabled:opacity-40 hover:bg-gray-50"
+              >Next</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
