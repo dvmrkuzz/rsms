@@ -7,6 +7,7 @@ import { VisitorLog } from './database/entities/visitor-log.entity';
 import { AuditLog } from './database/entities/audit-log.entity';
 import { Inquiry } from './database/entities/inquiry.entity';
 import { Announcement } from './database/entities/announcement.entity';
+import { FAQ } from './database/entities/faq.entity';
 
 config();
 
@@ -19,7 +20,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME ?? 'rsms_db',
   entities: [
     User, DocumentType, ServiceRequest,
-    VisitorLog, AuditLog, Inquiry, Announcement,
+    VisitorLog, AuditLog, Inquiry, Announcement, FAQ,
   ],
   migrations: ['src/database/migrations/*{.ts,.js}'],
   synchronize: false,

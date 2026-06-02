@@ -18,6 +18,8 @@ import { VisitorsModule } from './modules/visitors/visitors.module';
 import { InquiryModule } from './modules/inquiry/inquiry.module';
 import { AnnouncementsModule } from './modules/announcements/announcements.module';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { FAQ } from './database/entities/faq.entity';
+import { FaqModule } from './modules/faq/faq.module';
 
 @Module({
   imports: [
@@ -38,7 +40,7 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
         database: config.get('database.name'),
         entities: [
           User, DocumentType, ServiceRequest,
-          VisitorLog, AuditLog, Inquiry, Announcement,
+          VisitorLog, AuditLog, Inquiry, Announcement, FAQ,
         ],
         migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
         synchronize: false,
@@ -53,6 +55,7 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
     VisitorsModule,
     InquiryModule,
     AnnouncementsModule,
+    FaqModule,
   ],
   providers: [
     {

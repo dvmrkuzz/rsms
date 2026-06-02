@@ -90,19 +90,17 @@ export class VisitorsService {
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const [total, stillInside] = await Promise.all([
-      this.visitorRepository.count({
-        where: { timeIn: Between(today, tomorrow) },
-      }),
-      this.visitorRepository.count({
-        where: {
-          timeIn: Between(today, tomorrow),
-          timeOut: undefined,
-        },
-      }),
-    ]);
-
+  
+    const total = await this.visitorRepository.count({
+      where: { timeIn: Between(today, tomorrow) },
+    });
+  
+    const stillInside = await this.visitorRepository
+      .createQueryBuilder('v')
+      .where('v.time_in BETWEEN :start AND :end', { start: today, end: tomorrow })
+      .andWhere('v.time_out IS NULL')
+      .getCount();
+  
     return { totalToday: total, currentlyInside: stillInside };
   }
 }

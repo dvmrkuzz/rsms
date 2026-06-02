@@ -1,10 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import {
-  LayoutDashboard, Users, FileText, UserCheck,
-  Megaphone, ClipboardList, LogOut, Menu, X,
-  ChevronRight,
-} from 'lucide-react'
+import { LayoutDashboard, Users, FileText, UserCheck, Megaphone, ClipboardList, HelpCircle, LogOut, Menu, X, ChevronRight } from 'lucide-react'
 import { useAuthStore } from '../../store/auth.store'
 import logo from '../../assets/logo.png'
 
@@ -15,6 +11,7 @@ const navItems = [
   { to: '/dashboard/users', label: 'Users', icon: Users },
   { to: '/dashboard/announcements', label: 'Announcements', icon: Megaphone },
   { to: '/dashboard/audit', label: 'Audit Logs', icon: ClipboardList },
+  { to: '/dashboard/faqs', label: 'FAQs', icon: HelpCircle },
 ]
 
 export default function DashboardLayout() {

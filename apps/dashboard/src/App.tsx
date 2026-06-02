@@ -10,6 +10,7 @@ import VisitorsPage from './pages/dashboard/VisitorsPage'
 import UsersPage from './pages/dashboard/UsersPage'
 import AnnouncementsPage from './pages/dashboard/AnnouncementsPage'
 import AuditLogsPage from './pages/dashboard/AuditLogsPage'
+import FAQsPage from './pages/dashboard/FAQsPage'
 
 export default function App() {
   useEffect(() => {
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="users" element={<UsersPage />} />
         <Route path="announcements" element={<AnnouncementsPage />} />
         <Route path="audit" element={<AuditLogsPage />} />
+        <Route path="faqs" element={<FAQsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
