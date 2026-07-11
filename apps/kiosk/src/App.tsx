@@ -1,12 +1,14 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import HomePage from './pages/HomePage'
-import CheckinPage from './pages/CheckinPage'
+import DocumentRequestPage from './pages/DocumentRequestPage'
+import PickUpPage from './pages/PickUpPage'
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/checkin" element={<CheckinPage />} />
+      <Route path="/document-request" element={<DocumentRequestPage />} />
+      <Route path="/pickup" element={<PickUpPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

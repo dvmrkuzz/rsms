@@ -227,15 +227,22 @@ import {
       const validTransitions: Record<RequestStatus, RequestStatus[]> = {
         [RequestStatus.PENDING]: [
           RequestStatus.PROCESSING,
-          RequestStatus.REJECTED,
+          RequestStatus.FORWARDED_TO_MAIN,
           RequestStatus.CANCELLED,
+          RequestStatus.REJECTED,
         ],
         [RequestStatus.PROCESSING]: [
-          RequestStatus.READY,
-          RequestStatus.REJECTED,
+          RequestStatus.READY_FOR_PICKUP,
+          RequestStatus.FORWARDED_TO_MAIN,
           RequestStatus.CANCELLED,
+          RequestStatus.REJECTED,
         ],
-        [RequestStatus.READY]: [RequestStatus.RELEASED],
+        [RequestStatus.FORWARDED_TO_MAIN]: [
+          RequestStatus.READY_FOR_PICKUP,
+          RequestStatus.CANCELLED,
+          RequestStatus.REJECTED,
+        ],
+        [RequestStatus.READY_FOR_PICKUP]: [RequestStatus.RELEASED],
         [RequestStatus.RELEASED]: [],
         [RequestStatus.CANCELLED]: [],
         [RequestStatus.REJECTED]: [],

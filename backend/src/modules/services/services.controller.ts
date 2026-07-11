@@ -9,6 +9,7 @@ import {
   import { RolesGuard } from '../../common/guards/roles.guard';
   import { Roles } from '../../common/decorators/roles.decorator';
   import { CurrentUser } from '../../common/decorators/current-user.decorator';
+  import { Public } from '../../common/decorators/public.decorator';
   import { UserRole, User } from '../../database/entities/user.entity';
   import { RequestStatus } from '../../database/entities/service-request.entity';
   
@@ -37,6 +38,7 @@ import {
       return this.servicesService.findMyRequests(user.id, page, limit);
     }
   
+    @Public()
     @Get('track/:trackingNumber')
     findByTracking(@Param('trackingNumber') trackingNumber: string) {
       return this.servicesService.findByTracking(trackingNumber);
