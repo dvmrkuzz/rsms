@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import AnnouncementsPage from './pages/AnnouncementsPage'
-import FAQsPage from './pages/FAQsPage'
+import AssistantPage from './pages/AssistantPage'
 import TrackPage from './pages/TrackPage'
 
 export default function App() {
@@ -11,7 +11,8 @@ export default function App() {
       <Route path="/" element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="announcements" element={<AnnouncementsPage />} />
-        <Route path="faqs" element={<FAQsPage />} />
+        <Route path="assistant" element={<AssistantPage />} />
+        <Route path="faqs" element={<Navigate to="/assistant" replace />} />
         <Route path="track" element={<TrackPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

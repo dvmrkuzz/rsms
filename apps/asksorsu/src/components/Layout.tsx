@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { Home, Megaphone, HelpCircle, Search, Menu, X } from 'lucide-react'
+import { Home, Megaphone, MessageCircle, Search, Menu, X } from 'lucide-react'
 import logo from '../assets/logo.png'
+import ChatWidget from './ChatWidget'
 
 const navItems = [
   { to: '/', label: 'Home', icon: Home, end: true },
   { to: '/announcements', label: 'Announcements', icon: Megaphone },
-  { to: '/faqs', label: 'FAQs', icon: HelpCircle },
+  { to: '/assistant', label: 'Assistant', icon: MessageCircle },
   { to: '/track', label: 'Track', icon: Search },
 ]
 
@@ -116,6 +117,8 @@ export default function Layout() {
       {/* Bottom gold accent */}
       <div className="h-1 w-full shrink-0"
         style={{ background: 'linear-gradient(90deg, #C9A84C, #F0D080, #C9A84C)' }} />
+
+      <ChatWidget />
     </div>
   )
 }

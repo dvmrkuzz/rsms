@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { NavLink } from 'react-router-dom'
-import { Megaphone, HelpCircle, Search, ArrowRight, Clock, Pin } from 'lucide-react'
+import { Megaphone, MessageCircle, Search, ArrowRight, Clock, Pin } from 'lucide-react'
 import api from '../lib/api'
 import type { Announcement } from '../types'
 
@@ -12,7 +12,7 @@ export default function HomePage() {
 
   const quickLinks = [
     { to: '/track', icon: Search, label: 'Track Request', desc: 'Check document request status', color: '#7B1113', bg: '#F9F0F0' },
-    { to: '/faqs', icon: HelpCircle, label: 'FAQs', desc: 'Requirements and procedures', color: '#1D6A96', bg: '#EFF6FB' },
+    { to: '/assistant', icon: MessageCircle, label: 'Registrar Assistant', desc: 'Ask about requirements and procedures', color: '#1D6A96', bg: '#EFF6FB' },
     { to: '/announcements', icon: Megaphone, label: 'All Announcements', desc: 'View all office posts', color: '#1A6B3A', bg: '#EFF8F3' },
   ]
 
@@ -60,7 +60,7 @@ export default function HomePage() {
           Sorsogon State University — Bulan Campus
         </p>
         <p className="text-white/60 text-sm mt-1 relative z-10">
-          Announcements, FAQs, and request tracking in one place
+          Announcements, the Registrar Assistant, and request tracking in one place
         </p>
       </div>
 

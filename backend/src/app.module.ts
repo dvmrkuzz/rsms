@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import appConfig from './config/app.config';
 import { User } from './database/entities/user.entity';
@@ -20,6 +21,8 @@ import { AnnouncementsModule } from './modules/announcements/announcements.modul
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { FAQ } from './database/entities/faq.entity';
 import { FaqModule } from './modules/faq/faq.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { AssistantModule } from './modules/assistant/assistant.module';
 
 @Module({
   imports: [
@@ -48,6 +51,7 @@ import { FaqModule } from './modules/faq/faq.module';
         ssl: false,
       }),
     }),
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60000, limit: 20 }]),
     AuditModule,
     AuthModule,
     UsersModule,
@@ -56,6 +60,8 @@ import { FaqModule } from './modules/faq/faq.module';
     InquiryModule,
     AnnouncementsModule,
     FaqModule,
+    AnalyticsModule,
+    AssistantModule,
   ],
   providers: [
     {

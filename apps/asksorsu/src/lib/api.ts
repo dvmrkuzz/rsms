@@ -16,17 +16,9 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Handle 401 globally — redirect to login
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('rsms_token')
-      localStorage.removeItem('rsms_user')
-      window.location.href = '/login'
-    }
-    return Promise.reject(error)
-  }
+  (error) => Promise.reject(error)
 )
 
 export default api
