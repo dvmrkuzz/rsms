@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, BellOff, Megaphone } from 'lucide-react'
 import api from '../../lib/api'
+import PageHeader from '../../components/ui/PageHeader'
+import EmptyState from '../../components/ui/EmptyState'
 import type { Announcement } from '../../types'
 
 const TARGET_COLORS: Record<string, string> = {
@@ -38,34 +40,27 @@ export default function AnnouncementsPage() {
   return (
     <div className="space-y-5">
 
-      {/* Page Header */}
-      <div className="rounded-2xl p-5 text-white relative overflow-hidden flex items-center justify-between"
-        style={{ background: 'linear-gradient(135deg, #7B1113 0%, #A01515 100%)' }}>
-        <div className="absolute bottom-0 left-0 right-0 h-0.5"
-          style={{ background: 'linear-gradient(90deg, #C9A84C, #F0D080, #C9A84C)' }} />
-        <div>
-          <h1 className="text-xl font-black tracking-wide">Announcements</h1>
-          <p className="text-white/70 text-sm mt-0.5">Post and manage campus announcements</p>
-        </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-lg text-sm font-semibold hover:bg-red-50 transition"
-          style={{ color: '#7B1113' }}
-        >
-          <Plus className="w-4 h-4" />
-          New Announcement
-        </button>
-      </div>
+      <PageHeader
+        title="Announcements"
+        subtitle="Post and manage campus announcements"
+        action={
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-lg text-sm font-semibold hover:bg-red-50 transition"
+            style={{ color: '#7B1113' }}
+          >
+            <Plus className="w-4 h-4" />
+            New Announcement
+          </button>
+        }
+      />
 
       {/* List */}
       <div className="space-y-3">
         {isLoading ? (
           <div className="text-center py-10 text-gray-400">Loading...</div>
         ) : data?.data?.length === 0 ? (
-          <div className="text-center py-16">
-            <Megaphone className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400">No announcements yet</p>
-          </div>
+          <EmptyState icon={Megaphone} title="No announcements yet" hint="Post one so students and staff see it here." />
         ) : (
           data?.data?.map((a: Announcement) => (
             <div key={a.id}

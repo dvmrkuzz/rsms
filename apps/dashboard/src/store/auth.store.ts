@@ -9,10 +9,22 @@ interface AuthState {
   clearAuth: () => void
 }
 
+function loadStoredAuth(): Pick<AuthState, 'user' | 'token' | 'isAuthenticated'> {
+  const token = localStorage.getItem('rsms_token')
+  const userStr = localStorage.getItem('rsms_user')
+  if (token && userStr) {
+    try {
+      return { user: JSON.parse(userStr) as User, token, isAuthenticated: true }
+    } catch {
+      localStorage.removeItem('rsms_token')
+      localStorage.removeItem('rsms_user')
+    }
+  }
+  return { user: null, token: null, isAuthenticated: false }
+}
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: null,
-  isAuthenticated: false,
+  ...loadStoredAuth(),
 
   setAuth: (user, token) => {
     localStorage.setItem('rsms_token', token)
@@ -26,17 +38,3 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ user: null, token: null, isAuthenticated: false })
   },
 }))
-
-// Rehydrate from localStorage on app load
-export const rehydrateAuth = () => {
-  const token = localStorage.getItem('rsms_token')
-  const userStr = localStorage.getItem('rsms_user')
-  if (token && userStr) {
-    try {
-      const user = JSON.parse(userStr) as User
-      useAuthStore.getState().setAuth(user, token)
-    } catch {
-      useAuthStore.getState().clearAuth()
-    }
-  }
-}

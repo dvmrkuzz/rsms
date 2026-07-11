@@ -177,6 +177,10 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          <p className="text-center text-xs text-gray-400 mt-5">
+            Trouble signing in? Contact your system administrator.
+          </p>
         </div>
 
         <p className="text-center text-white/50 text-xs mt-6">

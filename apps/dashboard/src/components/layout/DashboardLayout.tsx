@@ -1,23 +1,32 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, FileText, UserCheck, Megaphone, ClipboardList, HelpCircle, LogOut, Menu, X, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, Users, FileText, UserCheck, Megaphone, ClipboardList, HelpCircle, BarChart2, LogOut, Menu, X, ChevronRight, Monitor } from 'lucide-react'
 import { useAuthStore } from '../../store/auth.store'
+import { useDashboardAlerts } from '../../hooks/useDashboardAlerts'
+import ToastStack from '../notifications/ToastStack'
 import logo from '../../assets/logo.png'
 
-const navItems = [
+const dailyTaskNavItems = [
   { to: '/dashboard', label: 'Overview', icon: LayoutDashboard, end: true },
+  { to: '/dashboard/counter', label: 'Counter', icon: Monitor },
   { to: '/dashboard/requests', label: 'Service Requests', icon: FileText },
   { to: '/dashboard/visitors', label: 'Visitors', icon: UserCheck },
-  { to: '/dashboard/users', label: 'Users', icon: Users },
   { to: '/dashboard/announcements', label: 'Announcements', icon: Megaphone },
-  { to: '/dashboard/audit', label: 'Audit Logs', icon: ClipboardList },
   { to: '/dashboard/faqs', label: 'FAQs', icon: HelpCircle },
+]
+
+const adminNavItems = [
+  { to: '/dashboard/analytics', label: 'Analytics', icon: BarChart2 },
+  { to: '/dashboard/users', label: 'Users', icon: Users },
+  { to: '/dashboard/audit', label: 'Audit Logs', icon: ClipboardList },
 ]
 
 export default function DashboardLayout() {
   const { user, clearAuth } = useAuthStore()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(true)
+
+  useDashboardAlerts()
 
   const handleLogout = () => {
     clearAuth()
@@ -26,6 +35,7 @@ export default function DashboardLayout() {
 
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
+      <ToastStack />
 
       {/* Sidebar */}
       <aside
@@ -53,7 +63,12 @@ export default function DashboardLayout() {
 
         {/* Nav */}
         <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
-          {navItems.map(({ to, label, icon: Icon, end }) => (
+          {sidebarOpen && (
+            <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-white/40">
+              Daily Tasks
+            </p>
+          )}
+          {dailyTaskNavItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
@@ -70,6 +85,32 @@ export default function DashboardLayout() {
               {sidebarOpen && <span>{label}</span>}
             </NavLink>
           ))}
+
+          {user?.role === 'admin' && (
+            <>
+              {sidebarOpen && (
+                <p className="px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-wider text-white/40">
+                  Administration
+                </p>
+              )}
+              {adminNavItems.map(({ to, label, icon: Icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      isActive
+                        ? 'bg-white/20 text-white font-semibold'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    }`
+                  }
+                >
+                  <Icon className="w-5 h-5 shrink-0" />
+                  {sidebarOpen && <span>{label}</span>}
+                </NavLink>
+              ))}
+            </>
+          )}
         </nav>
 
         {/* User + Logout */}

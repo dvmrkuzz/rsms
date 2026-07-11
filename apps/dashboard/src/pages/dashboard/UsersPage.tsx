@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { UserPlus, UserX, UserCheck } from 'lucide-react'
 import api from '../../lib/api'
+import PageHeader from '../../components/ui/PageHeader'
 import type { User, UserRole } from '../../types'
 import { useAuthStore } from '../../store/auth.store'
 
@@ -54,26 +55,22 @@ export default function UsersPage() {
   return (
     <div className="space-y-5">
 
-      {/* Page Header */}
-      <div className="rounded-2xl p-5 text-white relative overflow-hidden flex items-center justify-between"
-        style={{ background: 'linear-gradient(135deg, #7B1113 0%, #A01515 100%)' }}>
-        <div className="absolute bottom-0 left-0 right-0 h-0.5"
-          style={{ background: 'linear-gradient(90deg, #C9A84C, #F0D080, #C9A84C)' }} />
-        <div>
-          <h1 className="text-xl font-black tracking-wide">User Management</h1>
-          <p className="text-white/70 text-sm mt-0.5">Manage staff, admin, and student accounts</p>
-        </div>
-        {currentUser?.role === 'admin' && (
-          <button
-            onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-lg text-sm font-semibold hover:bg-red-50 transition"
-            style={{ color: '#7B1113' }}
-          >
-            <UserPlus className="w-4 h-4" />
-            Add User
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title="User Management"
+        subtitle="Manage staff, admin, and student accounts"
+        action={
+          currentUser?.role === 'admin' && (
+            <button
+              onClick={() => setShowCreate(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-lg text-sm font-semibold hover:bg-red-50 transition"
+              style={{ color: '#7B1113' }}
+            >
+              <UserPlus className="w-4 h-4" />
+              Add User
+            </button>
+          )
+        }
+      />
 
       {/* Role Filter */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex gap-3">

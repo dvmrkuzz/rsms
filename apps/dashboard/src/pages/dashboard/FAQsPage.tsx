@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Pencil, Trash2, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import api from '../../lib/api'
+import PageHeader from '../../components/ui/PageHeader'
+import EmptyState from '../../components/ui/EmptyState'
 import { useAuthStore } from '../../store/auth.store'
 
 interface FAQ {
@@ -108,29 +110,21 @@ export default function FAQsPage() {
   return (
     <div className="space-y-5">
 
-      {/* Page Header */}
-      <div className="rounded-2xl p-5 text-white relative overflow-hidden flex items-center justify-between"
-        style={{ background: 'linear-gradient(135deg, #7B1113 0%, #A01515 100%)' }}>
-        <div className="absolute bottom-0 left-0 right-0 h-0.5"
-          style={{ background: 'linear-gradient(90deg, #C9A84C, #F0D080, #C9A84C)' }} />
-        <div className="flex items-center gap-3">
-          <HelpCircle className="w-6 h-6 text-white/80" />
-          <div>
-            <h1 className="text-xl font-black tracking-wide">FAQ Management</h1>
-            <p className="text-white/70 text-sm mt-0.5">
-              Manage frequently asked questions for students
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={() => { resetForm(); setShowForm(true) }}
-          className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-lg text-sm font-semibold hover:bg-red-50 transition"
-          style={{ color: '#7B1113' }}
-        >
-          <Plus className="w-4 h-4" />
-          Add FAQ
-        </button>
-      </div>
+      <PageHeader
+        icon={HelpCircle}
+        title="FAQ Management"
+        subtitle="Manage frequently asked questions for students"
+        action={
+          <button
+            onClick={() => { resetForm(); setShowForm(true) }}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-lg text-sm font-semibold hover:bg-red-50 transition"
+            style={{ color: '#7B1113' }}
+          >
+            <Plus className="w-4 h-4" />
+            Add FAQ
+          </button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -162,9 +156,8 @@ export default function FAQsPage() {
         {isLoading ? (
           <div className="text-center py-10 text-gray-400">Loading...</div>
         ) : !faqs?.length ? (
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
-            <HelpCircle className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-            <p className="text-gray-400">No FAQs yet. Add your first one.</p>
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
+            <EmptyState icon={HelpCircle} title="No FAQs yet" hint="Add your first one so students can find answers themselves." />
           </div>
         ) : (
           faqs.map((faq: FAQ) => (

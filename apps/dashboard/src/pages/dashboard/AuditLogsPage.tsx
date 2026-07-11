@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Shield } from 'lucide-react'
 import api from '../../lib/api'
+import PageHeader from '../../components/ui/PageHeader'
 
 const ACTION_COLORS: Record<string, string> = {
   create: 'bg-green-100 text-green-700',
@@ -30,19 +31,11 @@ export default function AuditLogsPage() {
   return (
     <div className="space-y-5">
 
-      {/* Page Header */}
-      <div className="rounded-2xl p-5 text-white relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #7B1113 0%, #A01515 100%)' }}>
-        <div className="absolute bottom-0 left-0 right-0 h-0.5"
-          style={{ background: 'linear-gradient(90deg, #C9A84C, #F0D080, #C9A84C)' }} />
-        <div className="flex items-center gap-3">
-          <Shield className="w-6 h-6 text-white/80" />
-          <div>
-            <h1 className="text-xl font-black tracking-wide">Audit Logs</h1>
-            <p className="text-white/70 text-sm mt-0.5">Complete system activity trail</p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        icon={Shield}
+        title="Audit Logs"
+        subtitle="Complete system activity trail — who did what, and when"
+      />
 
       {/* Filter */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex gap-2 flex-wrap">
