@@ -37,10 +37,18 @@ export class InquiryService {
   async create(dto: CreateInquiryDto): Promise<Inquiry> {
     const inquiry = this.inquiryRepository.create({
       sessionId: dto.sessionId,
+      userId: dto.userId ?? null,
       question: dto.question,
       interface: dto.interface,
     });
     return this.inquiryRepository.save(inquiry);
+  }
+
+  async findMine(userId: string): Promise<Inquiry[]> {
+    return this.inquiryRepository.find({
+      where: { userId },
+      order: { askedAt: 'ASC' },
+    });
   }
 
   async saveAnswer(id: string, answer: string): Promise<Inquiry> {

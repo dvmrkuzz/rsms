@@ -49,11 +49,12 @@ export class AssistantService {
     }
   }
 
-  async chat(dto: ChatDto): Promise<ChatResult> {
+  async chat(dto: ChatDto, userId?: string): Promise<ChatResult> {
     const intent = detectIntent(dto.message);
 
     const inquiry = await this.inquiryService.create({
       sessionId: dto.sessionId,
+      userId,
       question: dto.message,
       interface: InquiryInterface.ASKSORSU,
     });

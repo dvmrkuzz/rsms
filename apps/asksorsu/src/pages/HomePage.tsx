@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { NavLink } from 'react-router-dom'
-import { Megaphone, MessageCircle, Search, ArrowRight, Clock, Pin } from 'lucide-react'
+import { Megaphone, Search, ArrowRight, Clock, Pin } from 'lucide-react'
 import api from '../lib/api'
 import type { Announcement } from '../types'
 
@@ -12,7 +12,6 @@ export default function HomePage() {
 
   const quickLinks = [
     { to: '/track', icon: Search, label: 'Track Request', desc: 'Check document request status', color: '#7B1113', bg: '#F9F0F0' },
-    { to: '/assistant', icon: MessageCircle, label: 'Registrar Assistant', desc: 'Ask about requirements and procedures', color: '#1D6A96', bg: '#EFF6FB' },
     { to: '/announcements', icon: Megaphone, label: 'All Announcements', desc: 'View all office posts', color: '#1A6B3A', bg: '#EFF8F3' },
   ]
 
@@ -60,12 +59,12 @@ export default function HomePage() {
           Sorsogon State University — Bulan Campus
         </p>
         <p className="text-white/60 text-sm mt-1 relative z-10">
-          Announcements, the Registrar Assistant, and request tracking in one place
+          Announcements and request tracking in one place — tap the chat button anytime for the Registrar Assistant
         </p>
       </div>
 
       {/* Quick Access Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         {quickLinks.map(({ to, icon: Icon, label, desc, color, bg }) => (
           <NavLink key={to} to={to}
             className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-all group flex items-center gap-4 sm:flex-col sm:items-start">

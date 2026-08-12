@@ -1,18 +1,25 @@
 import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
-import { Home, Megaphone, MessageCircle, Search, Menu, X } from 'lucide-react'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Home, Megaphone, Search, Menu, X, LogOut, UserCircle } from 'lucide-react'
 import logo from '../assets/logo.png'
 import ChatWidget from './ChatWidget'
+import { useAuthStore } from '../store/auth.store'
 
 const navItems = [
   { to: '/', label: 'Home', icon: Home, end: true },
   { to: '/announcements', label: 'Announcements', icon: Megaphone },
-  { to: '/assistant', label: 'Assistant', icon: MessageCircle },
   { to: '/track', label: 'Track', icon: Search },
 ]
 
 export default function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const navigate = useNavigate()
+  const { user, isAuthenticated, clearAuth } = useAuthStore()
+
+  const handleSignOut = () => {
+    clearAuth()
+    navigate('/')
+  }
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F3F4F6' }}>
@@ -61,6 +68,31 @@ export default function Layout() {
                 {label}
               </NavLink>
             ))}
+
+            <div className="w-px h-5 bg-gray-200 mx-1" />
+
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2 pl-1">
+                <span className="text-sm text-gray-600 font-medium">
+                  {user?.firstName}
+                </span>
+                <button
+                  onClick={handleSignOut}
+                  title="Sign out"
+                  className="p-2 rounded-lg text-gray-400 hover:text-red-700 hover:bg-red-50 transition"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <NavLink
+                to="/login"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition"
+              >
+                <UserCircle className="w-4 h-4" />
+                Sign In
+              </NavLink>
+            )}
           </nav>
 
           {/* Mobile hamburger */}
@@ -93,6 +125,27 @@ export default function Layout() {
                 {label}
               </NavLink>
             ))}
+
+            <div className="h-px bg-gray-100 my-1" />
+
+            {isAuthenticated ? (
+              <button
+                onClick={() => { setMobileMenuOpen(false); handleSignOut() }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+              >
+                <LogOut className="w-5 h-5" />
+                Sign Out ({user?.firstName})
+              </button>
+            ) : (
+              <NavLink
+                to="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+              >
+                <UserCircle className="w-5 h-5" />
+                Sign In
+              </NavLink>
+            )}
           </div>
         )}
       </header>

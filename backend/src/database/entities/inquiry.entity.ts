@@ -1,22 +1,30 @@
 import {
     Entity, PrimaryGeneratedColumn, Column,
-    CreateDateColumn
+    CreateDateColumn, ManyToOne, JoinColumn,
   } from 'typeorm';
-  
+  import { User } from './user.entity';
+
   export enum InquiryInterface {
     KIOSK     = 'kiosk',
     DASHBOARD = 'dashboard',
     ASKSORSU  = 'asksorsu',
   }
-  
+
   @Entity('inquiries')
   export class Inquiry {
     @PrimaryGeneratedColumn('uuid')
     id: string;
-  
+
     @Column({ name: 'session_id' })
     sessionId: string;
-  
+
+    @Column({ name: 'user_id', type: 'uuid', nullable: true })
+    userId: string | null;
+
+    @ManyToOne(() => User, { nullable: true })
+    @JoinColumn({ name: 'user_id' })
+    user: User | null;
+
     @Column({ type: 'text' })
     question: string;
   

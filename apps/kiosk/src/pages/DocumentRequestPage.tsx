@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, CheckCircle, Loader2, Hash } from 'lucide-react'
+import {
+  Loader2, FileText, ClipboardList, FileCheck2,
+  GraduationCap, ShieldCheck, Award, FileMinus, Stamp,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import api from '../lib/api'
-import logo from '../assets/logo.png'
+import KioskStepHeader from '../components/KioskStepHeader'
+import KioskSuccessScreen from '../components/KioskSuccessScreen'
 
 type Step = 'doc-type' | 'details' | 'success'
 
@@ -20,14 +25,14 @@ interface SuccessData {
   visitorName: string
 }
 
-const DOC_ICONS: Record<string, string> = {
-  'Transcript of Records': '📋',
-  'Certificate of Enrollment': '📄',
-  'Diploma': '🎓',
-  'Good Moral Certificate': '⭐',
-  'Certificate of Graduation': '🏅',
-  'Honorable Dismissal': '📝',
-  'Authentication': '🔏',
+const DOC_ICONS: Record<string, LucideIcon> = {
+  'Transcript of Records': ClipboardList,
+  'Certificate of Enrollment': FileCheck2,
+  'Diploma': GraduationCap,
+  'Good Moral Certificate': ShieldCheck,
+  'Certificate of Graduation': Award,
+  'Honorable Dismissal': FileMinus,
+  'Authentication': Stamp,
 }
 
 export default function DocumentRequestPage() {
@@ -80,42 +85,31 @@ export default function DocumentRequestPage() {
   }
 
   if (step === 'success' && successData) {
-    return <SuccessScreen data={successData} />
+    return (
+      <KioskSuccessScreen
+        title="Request Submitted!"
+        visitorFirstName={successData.visitorName.split(' ')[0]}
+        queueNumber={successData.queueNumber}
+        queueHint="Please wait for your number to be called"
+        trackingNumber={successData.trackingNumber}
+      />
+    )
   }
 
-  return (
-    <div className="min-h-screen flex flex-col"
-      style={{ background: '#F5F5F5' }}>
+  const SelectedIcon = selectedDoc ? DOC_ICONS[selectedDoc.name] ?? FileText : FileText
 
-      {/* Header */}
-      <div className="text-white px-8 py-5 flex items-center gap-4 shrink-0"
-        style={{ background: 'linear-gradient(135deg, #7B1113 0%, #A01515 100%)' }}>
-        <button
-          onClick={() => step === 'details' ? setStep('doc-type') : navigate('/')}
-          className="p-3 rounded-xl hover:bg-white/10 transition active:scale-95"
-        >
-          <ArrowLeft className="w-7 h-7" />
-        </button>
-        <img src={logo} alt="SorSU" className="w-10 h-10 object-contain" />
-        <div>
-          <p className="font-black text-xl">Document Request</p>
-          <p className="text-white/70 text-sm">
-            {step === 'doc-type' ? 'Step 1 of 2 — Select document type' : 'Step 2 of 2 — Enter your details'}
-          </p>
-        </div>
-        {/* Step indicator */}
-        <div className="ml-auto flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-white" />
-          <div className={`w-3 h-3 rounded-full ${step === 'details' ? 'bg-white' : 'bg-white/30'}`} />
-        </div>
-      </div>
-      <div className="h-1 shrink-0"
-        style={{ background: 'linear-gradient(90deg, #C9A84C, #F0D080, #C9A84C)' }} />
+  return (
+    <div className="min-h-screen flex flex-col" style={{ background: '#F5F5F5' }}>
+      <KioskStepHeader
+        title="Document Request"
+        subtitle={step === 'doc-type' ? 'Step 1 of 2 — Select document type' : 'Step 2 of 2 — Enter your details'}
+        onBack={() => step === 'details' ? setStep('doc-type') : navigate('/')}
+        steps={{ total: 2, current: step === 'doc-type' ? 1 : 2 }}
+      />
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-8 py-8">
 
-        {/* Error */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-5 py-4 text-base mb-6">
             {error}
@@ -134,33 +128,37 @@ export default function DocumentRequestPage() {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-5">
-                {docTypes.map(doc => (
-                  <button
-                    key={doc.id}
-                    onClick={() => handleSelectDoc(doc)}
-                    className="bg-white rounded-2xl p-6 text-left shadow-sm border-2 border-transparent transition-all active:scale-95 hover:border-red-800 hover:shadow-md"
-                  >
-                    <div className="text-4xl mb-3">
-                      {DOC_ICONS[doc.name] ?? '📄'}
-                    </div>
-                    <p className="font-black text-lg text-gray-800 mb-1">{doc.name}</p>
-                    {doc.description && (
-                      <p className="text-sm text-gray-500 line-clamp-2">{doc.description}</p>
-                    )}
-                    <div className="flex items-center gap-4 mt-3">
-                      {doc.processingDays > 0 && (
-                        <span className="text-xs font-medium text-gray-400">
-                          {doc.processingDays} day{doc.processingDays !== 1 ? 's' : ''} processing
-                        </span>
+                {docTypes.map(doc => {
+                  const Icon = DOC_ICONS[doc.name] ?? FileText
+                  return (
+                    <button
+                      key={doc.id}
+                      onClick={() => handleSelectDoc(doc)}
+                      className="bg-white rounded-2xl p-6 text-left shadow-sm border-2 border-transparent transition-all active:scale-95 hover:border-red-800 hover:shadow-md"
+                    >
+                      <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-3"
+                        style={{ background: '#F5EDED' }}>
+                        <Icon className="w-7 h-7" style={{ color: '#7B1113' }} />
+                      </div>
+                      <p className="font-black text-lg text-gray-800 mb-1">{doc.name}</p>
+                      {doc.description && (
+                        <p className="text-sm text-gray-500 line-clamp-2">{doc.description}</p>
                       )}
-                      {doc.fee > 0 && (
-                        <span className="text-xs font-semibold" style={{ color: '#7B1113' }}>
-                          ₱{Number(doc.fee).toFixed(2)}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                ))}
+                      <div className="flex items-center gap-4 mt-3">
+                        {doc.processingDays > 0 && (
+                          <span className="text-xs font-medium text-gray-400">
+                            {doc.processingDays} day{doc.processingDays !== 1 ? 's' : ''} processing
+                          </span>
+                        )}
+                        {doc.fee > 0 && (
+                          <span className="text-xs font-semibold" style={{ color: '#7B1113' }}>
+                            ₱{Number(doc.fee).toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
             )}
           </div>
@@ -170,7 +168,10 @@ export default function DocumentRequestPage() {
         {step === 'details' && (
           <div className="max-w-lg mx-auto">
             <div className="bg-white rounded-2xl px-5 py-3 mb-6 border border-gray-100 flex items-center gap-3">
-              <span className="text-2xl">{DOC_ICONS[selectedDoc?.name ?? ''] ?? '📄'}</span>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                style={{ background: '#F5EDED' }}>
+                <SelectedIcon className="w-5 h-5" style={{ color: '#7B1113' }} />
+              </div>
               <div>
                 <p className="text-xs text-gray-400">Selected document</p>
                 <p className="font-bold text-gray-800">{selectedDoc?.name}</p>
@@ -234,57 +235,6 @@ export default function DocumentRequestPage() {
           </div>
         )}
       </div>
-    </div>
-  )
-}
-
-function SuccessScreen({ data }: { data: SuccessData }) {
-  return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden"
-      style={{ background: 'linear-gradient(135deg, #7B1113 0%, #A01515 40%, #7B1113 100%)' }}>
-      <div className="h-1.5 w-full"
-        style={{ background: 'linear-gradient(90deg, #C9A84C, #F0D080, #C9A84C)' }} />
-
-      <div className="flex-1 flex flex-col items-center justify-center px-8 text-center space-y-8">
-
-        <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center shadow-2xl">
-          <CheckCircle className="w-16 h-16" style={{ color: '#7B1113' }} />
-        </div>
-
-        <div>
-          <h2 className="text-4xl font-black text-white mb-2">Request Submitted!</h2>
-          <p className="text-white/70 text-xl">Welcome, {data.visitorName.split(' ')[0]}!</p>
-        </div>
-
-        {/* Queue Number — big and prominent */}
-        <div className="bg-white rounded-3xl px-16 py-8 shadow-2xl">
-          <p className="text-sm font-semibold text-gray-400 mb-1 tracking-widest uppercase">Your Queue Number</p>
-          <div className="flex items-center justify-center gap-2">
-            <Hash className="w-8 h-8" style={{ color: '#7B1113' }} />
-            <span className="text-7xl font-black tracking-tight" style={{ color: '#7B1113' }}>
-              {data.queueNumber}
-            </span>
-          </div>
-          <p className="text-gray-500 text-sm mt-2">Please wait for your number to be called</p>
-        </div>
-
-        {/* Tracking Number */}
-        {data.trackingNumber && (
-          <div className="rounded-2xl px-8 py-4 border-2"
-            style={{ background: 'rgba(240,208,128,0.15)', borderColor: 'rgba(240,208,128,0.5)' }}>
-            <p className="text-white/60 text-sm mb-1">Tracking Number</p>
-            <p className="font-black text-2xl tracking-widest font-mono" style={{ color: '#F0D080' }}>
-              {data.trackingNumber}
-            </p>
-            <p className="text-white/50 text-xs mt-1">Save this to track your request status</p>
-          </div>
-        )}
-
-        <p className="text-white/40 text-sm">Returning to home screen in 10 seconds...</p>
-      </div>
-
-      <div className="h-1.5 w-full"
-        style={{ background: 'linear-gradient(90deg, #C9A84C, #F0D080, #C9A84C)' }} />
     </div>
   )
 }

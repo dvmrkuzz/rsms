@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, CheckCircle, Loader2, Hash } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import api from '../lib/api'
-import logo from '../assets/logo.png'
+import KioskStepHeader from '../components/KioskStepHeader'
+import KioskSuccessScreen from '../components/KioskSuccessScreen'
 
 interface SuccessData {
   queueNumber: string
@@ -45,65 +46,22 @@ export default function PickUpPage() {
 
   if (successData) {
     return (
-      <div className="min-h-screen flex flex-col relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #7B1113 0%, #A01515 40%, #7B1113 100%)' }}>
-        <div className="h-1.5 w-full"
-          style={{ background: 'linear-gradient(90deg, #C9A84C, #F0D080, #C9A84C)' }} />
-
-        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center space-y-8">
-          <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center shadow-2xl">
-            <CheckCircle className="w-16 h-16" style={{ color: '#7B1113' }} />
-          </div>
-
-          <div>
-            <h2 className="text-4xl font-black text-white mb-2">Logged In!</h2>
-            <p className="text-white/70 text-xl">Welcome, {successData.visitorName.split(' ')[0]}!</p>
-          </div>
-
-          {/* Queue Number — big and prominent */}
-          <div className="bg-white rounded-3xl px-16 py-8 shadow-2xl">
-            <p className="text-sm font-semibold text-gray-400 mb-1 tracking-widest uppercase">Your Queue Number</p>
-            <div className="flex items-center justify-center gap-2">
-              <Hash className="w-8 h-8" style={{ color: '#7B1113' }} />
-              <span className="text-7xl font-black tracking-tight" style={{ color: '#7B1113' }}>
-                {successData.queueNumber}
-              </span>
-            </div>
-            <p className="text-gray-500 text-sm mt-2">Please wait for your number to be called at the window</p>
-          </div>
-
-          <p className="text-white/40 text-sm">Returning to home screen in 10 seconds...</p>
-        </div>
-
-        <div className="h-1.5 w-full"
-          style={{ background: 'linear-gradient(90deg, #C9A84C, #F0D080, #C9A84C)' }} />
-      </div>
+      <KioskSuccessScreen
+        title="Logged In!"
+        visitorFirstName={successData.visitorName.split(' ')[0]}
+        queueNumber={successData.queueNumber}
+        queueHint="Please wait for your number to be called at the window"
+      />
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col"
-      style={{ background: '#F5F5F5' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#F5F5F5' }}>
+      <KioskStepHeader
+        title="Pick Up Document"
+        subtitle="Enter your details to get a queue number"
+      />
 
-      {/* Header */}
-      <div className="text-white px-8 py-5 flex items-center gap-4 shrink-0"
-        style={{ background: 'linear-gradient(135deg, #7B1113 0%, #A01515 100%)' }}>
-        <button
-          onClick={() => navigate('/')}
-          className="p-3 rounded-xl hover:bg-white/10 transition active:scale-95"
-        >
-          <ArrowLeft className="w-7 h-7" />
-        </button>
-        <img src={logo} alt="SorSU" className="w-10 h-10 object-contain" />
-        <div>
-          <p className="font-black text-xl">Pick Up Document</p>
-          <p className="text-white/70 text-sm">Enter your details to get a queue number</p>
-        </div>
-      </div>
-      <div className="h-1 shrink-0"
-        style={{ background: 'linear-gradient(90deg, #C9A84C, #F0D080, #C9A84C)' }} />
-
-      {/* Form */}
       <div className="flex-1 flex items-start justify-center px-8 py-10 overflow-y-auto">
         <div className="w-full max-w-lg space-y-6">
 

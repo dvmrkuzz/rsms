@@ -43,37 +43,23 @@ import {
       const user = await this.userRepository.findOne({
         where: { email: dto.email, isActive: true },
       });
-  
-      if (!user) {
+
+      // Accounts created via Google have no passwordHash — bcrypt.compare
+      // would throw on a null hash, so treat that the same as a wrong password.
+      if (!user || !user.passwordHash) {
         throw new UnauthorizedException('Invalid email or password');
       }
-  
+
       const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
-  
+
       if (!isPasswordValid) {
         throw new UnauthorizedException('Invalid email or password');
       }
-  
+
       // Update last login
       await this.userRepository.update(user.id, { lastLoginAt: new Date() });
-  
-      const payload: JwtPayload = {
-        sub: user.id,
-        email: user.email,
-        role: user.role,
-      };
-  
-      return {
-        accessToken: this.jwtService.sign(payload),
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-          studentId: user.studentId,
-        },
-      };
+
+      return this.buildAuthResponse(user);
     }
   
     async register(dto: RegisterDto): Promise<AuthResponse> {
@@ -107,26 +93,64 @@ import {
       });
   
       const saved = await this.userRepository.save(user);
-  
+
+      return this.buildAuthResponse(saved);
+    }
+
+    async validateOrCreateGoogleUser(profile: {
+      googleId: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+    }): Promise<User> {
+      let user = await this.userRepository.findOne({
+        where: { googleId: profile.googleId },
+      });
+      if (user) return user;
+
+      // Same email registered via password first — link the Google identity
+      // to that existing account rather than creating a duplicate.
+      user = await this.userRepository.findOne({ where: { email: profile.email } });
+      if (user) {
+        await this.userRepository.update(user.id, { googleId: profile.googleId });
+        return { ...user, googleId: profile.googleId };
+      }
+
+      const created = this.userRepository.create({
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        email: profile.email,
+        googleId: profile.googleId,
+        passwordHash: null,
+        role: UserRole.STUDENT,
+      });
+      return this.userRepository.save(created);
+    }
+
+    issueTokenFor(user: User): AuthResponse {
+      return this.buildAuthResponse(user);
+    }
+
+    private buildAuthResponse(user: User): AuthResponse {
       const payload: JwtPayload = {
-        sub: saved.id,
-        email: saved.email,
-        role: saved.role,
+        sub: user.id,
+        email: user.email,
+        role: user.role,
       };
-  
+
       return {
         accessToken: this.jwtService.sign(payload),
         user: {
-          id: saved.id,
-          email: saved.email,
-          firstName: saved.firstName,
-          lastName: saved.lastName,
-          role: saved.role,
-          studentId: saved.studentId,
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          studentId: user.studentId,
         },
       };
     }
-  
+
     async getMe(userId: string): Promise<Omit<User, 'passwordHash'>> {
       const user = await this.userRepository.findOne({
         where: { id: userId, isActive: true },

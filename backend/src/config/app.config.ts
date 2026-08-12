@@ -23,4 +23,17 @@ export default () => ({
     apiKey: process.env.GEMINI_API_KEY ?? '',
     model: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
   },
+
+  google: {
+    // Placeholder values keep passport-google-oauth20's strategy constructor
+    // from throwing on boot when OAuth hasn't been configured yet — the
+    // Google login button simply won't work until real credentials are set.
+    // `||` (not `??`) on purpose: an empty string from an unset .env key
+    // should fall back too, not just a missing one.
+    clientId: process.env.GOOGLE_CLIENT_ID || 'not-configured',
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'not-configured',
+    callbackUrl: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/api/v1/auth/google/callback',
+  },
+
+  asksorsuUrl: process.env.ASKSORSU_URL || 'http://localhost:5175',
 });

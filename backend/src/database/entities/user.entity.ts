@@ -30,10 +30,13 @@ import {
   
     @Column({ unique: true })
     email: string;
-  
-    @Column({ name: 'password_hash' })
-    passwordHash: string;
-  
+
+    @Column({ name: 'password_hash', type: 'varchar', nullable: true })
+    passwordHash: string | null;
+
+    @Column({ name: 'google_id', type: 'varchar', nullable: true, unique: true })
+    googleId: string | null;
+
     @Column({ type: 'enum', enum: UserRole, default: UserRole.STUDENT })
     role: UserRole;
   

@@ -8,7 +8,8 @@ import { CreateInquiryDto, FeedbackDto } from './dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { UserRole } from '../../database/entities/user.entity';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { UserRole, User } from '../../database/entities/user.entity';
 
 @Controller('inquiries')
 export class InquiryController {
@@ -34,6 +35,12 @@ export class InquiryController {
   @Get('session/:sessionId')
   findBySession(@Param('sessionId') sessionId: string) {
     return this.inquiryService.findBySession(sessionId);
+  }
+
+  @Get('mine')
+  @UseGuards(JwtAuthGuard)
+  findMine(@CurrentUser() user: User) {
+    return this.inquiryService.findMine(user.id);
   }
 
   @Post()
