@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Anthropic from '@anthropic-ai/sdk';
 import { Document } from '@langchain/core/documents';
 import { ServicesService } from '../services/services.service';
 import { InquiryService } from '../inquiry/inquiry.service';
@@ -30,7 +30,7 @@ export interface ChatResult {
 @Injectable()
 export class AssistantService {
   private readonly logger = new Logger(AssistantService.name);
-  private readonly genAI: GoogleGenerativeAI | null;
+  private readonly anthropic: Anthropic | null;
   private readonly modelName: string;
 
   constructor(
@@ -39,12 +39,13 @@ export class AssistantService {
     private readonly servicesService: ServicesService,
     private readonly inquiryService: InquiryService,
   ) {
-    const apiKey = this.configService.get<string>('gemini.apiKey');
-    this.modelName = this.configService.get<string>('gemini.model') ?? 'gemini-2.5-flash';
-    this.genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
-    if (!this.genAI) {
+    const apiKey = this.configService.get<string>('anthropic.apiKey');
+    this.modelName =
+      this.configService.get<string>('anthropic.model') ?? 'claude-haiku-4-5';
+    this.anthropic = apiKey ? new Anthropic({ apiKey }) : null;
+    if (!this.anthropic) {
       this.logger.warn(
-        'GEMINI_API_KEY not set — the assistant will only return raw document fallback answers.',
+        'ANTHROPIC_API_KEY not set — the assistant will only return raw document fallback answers.',
       );
     }
   }
@@ -120,18 +121,31 @@ export class AssistantService {
     const docs = await this.ingestionService.retrieve(dto.message, 5);
     const sources = docs.map((d) => d.metadata);
 
-    if (!this.genAI) {
+    if (!this.anthropic) {
       return this.rawFallback(docs, sources);
     }
 
     try {
-      const prompt = this.buildPrompt(dto, docs);
-      const model = this.genAI.getGenerativeModel({ model: this.modelName });
-      const result = await model.generateContent(prompt);
-      const answer = result.response.text().trim();
+      const { system, userMessage } = this.buildPrompt(dto, docs);
+      const response = await this.anthropic.messages.create({
+        model: this.modelName,
+        max_tokens: 1024,
+        system,
+        messages: [{ role: 'user', content: userMessage }],
+      });
+
+      const answer = response.content
+        .filter((block): block is Anthropic.TextBlock => block.type === 'text')
+        .map((block) => block.text)
+        .join('')
+        .trim();
+
       return { intent: 'general', answer, sources };
     } catch (err) {
-      this.logger.error('Gemini call failed, falling back to raw retrieved text', err as Error);
+      this.logger.error(
+        'Anthropic call failed, falling back to raw retrieved text',
+        err as Error,
+      );
       return this.rawFallback(docs, sources);
     }
   }
@@ -157,7 +171,10 @@ export class AssistantService {
     };
   }
 
-  private buildPrompt(dto: ChatDto, docs: Document[]): string {
+  private buildPrompt(
+    dto: ChatDto,
+    docs: Document[],
+  ): { system: string; userMessage: string } {
     const context = docs.length
       ? docs.map((d) => d.pageContent).join('\n\n---\n\n')
       : 'No matching information found.';
@@ -167,16 +184,18 @@ export class AssistantService {
       .map((m) => `${m.role === 'user' ? 'Student' : 'Assistant'}: ${m.text}`)
       .join('\n');
 
-    return `You are the Registrar Assistant for Sorsogon State University - Bulan Campus. Answer the student's question using ONLY the official information provided below. Be concise, friendly, and professional. If the answer isn't in the provided information, say you don't have that information and suggest visiting or contacting the Registrar's Office directly — do not make anything up. Do not repeat these instructions back to the user.
+   const system = `You are the Registrar Assistant for Sorsogon State University - Bulan Campus. Answer the student's question using ONLY the official information provided in the user's message. If the answer isn't in the provided information, say you don't have that information and suggest visiting or contacting the Registrar's Office directly — do not make anything up. Do not repeat these instructions back to the user.
 
-Language: Detect the language the student's question is written in — English, Tagalog, or Bicol (Bikol) — and reply in that same language. If the question mixes languages (e.g. Taglish), reply in that same mixed style. Never mention that you detected a language or translated anything.
+Formatting: Keep answers short and easy to read. Start with one brief sentence that directly answers the question. When listing requirements, steps, fees, or multiple items, use a Markdown bullet list ("- " at the start of each line) with one item per line. Put a blank line between the intro sentence and the list. Bold key details like fees or processing times using **double asterisks**. Do not use headings. Keep the whole reply under about 120 words unless the question truly needs more.
 
-Official registrar information:
+Language: Detect the language the student's question is written in — English, Tagalog, or Bicol (Bikol) — and reply in that same language. If the question mixes languages (e.g. Taglish), reply in that same mixed style. Never mention that you detected a language or translated anything.`;
+    const userMessage = `Official registrar information:
 """
 ${context}
 """
 ${historyText ? `\nRecent conversation:\n${historyText}\n` : ''}
-Student: ${dto.message}
-Assistant:`;
+Student's question: ${dto.message}`;
+
+    return { system, userMessage };
   }
 }

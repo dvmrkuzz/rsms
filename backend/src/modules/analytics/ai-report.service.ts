@@ -1,5 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import Anthropic from '@anthropic-ai/sdk';
 import { AnalyticsService } from './analytics.service';
 
 @Injectable()
@@ -11,43 +12,47 @@ export class AiReportService {
 
   async generateReport(): Promise<{ report: string; analytics: any }> {
     const analytics = await this.analyticsService.getFullAnalytics();
-    const report = await this.callGemini(analytics);
+    const report = await this.callClaude(analytics);
     return { report, analytics };
   }
 
-  private async callGemini(analytics: any): Promise<string> {
-    const apiKey = this.configService.get<string>('gemini.apiKey');
-    const model = this.configService.get<string>('gemini.model') ?? 'gemini-2.5-flash';
+  private async callClaude(analytics: any): Promise<string> {
+    const apiKey = this.configService.get<string>('anthropic.apiKey');
+    const model =
+      this.configService.get<string>('anthropic.model') ?? 'claude-haiku-4-5';
 
+    if (!apiKey) {
+      throw new InternalServerErrorException('ANTHROPIC_API_KEY not configured');
+    }
+
+    const anthropic = new Anthropic({ apiKey });
     const prompt = this.buildPrompt(analytics);
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    try {
+      const response = await anthropic.messages.create({
+        model,
+        max_tokens: 1024,
+        temperature: 0.7,
+        messages: [{ role: 'user', content: prompt }],
+      });
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1024,
-        },
-      }),
-    });
+      const text = response.content
+        .filter((block): block is Anthropic.TextBlock => block.type === 'text')
+        .map((block) => block.text)
+        .join('')
+        .trim();
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new InternalServerErrorException(`Gemini API error: ${error}`);
+      if (!text) {
+        throw new InternalServerErrorException('No response from Anthropic API');
+      }
+
+      return text;
+    } catch (err) {
+      if (err instanceof InternalServerErrorException) throw err;
+      throw new InternalServerErrorException(
+        `Anthropic API error: ${(err as Error).message}`,
+      );
     }
-
-    const data = await response.json() as any;
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!text) {
-      throw new InternalServerErrorException('No response from Gemini API');
-    }
-
-    return text;
   }
 
   private buildPrompt(analytics: any): string {

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { MessageCircle, X, RotateCcw, Send, AlertTriangle } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
+import ReactMarkdown from 'react-markdown'
 import api from '../lib/api'
 import { useAssistantChat } from '../hooks/useAssistantChat'
 import logo from '../assets/logo.png'
@@ -100,16 +101,40 @@ export default function ChatWidget() {
                     <MessageCircle className="w-3.5 h-3.5 text-white" />
                   </div>
                 )}
-                <div className="max-w-[80%]">
+                <div className="max-w-[82%]">
                   <div
-                    className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-line ${
+                    className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
                       msg.role === 'user'
-                        ? 'text-white rounded-br-sm'
+                        ? 'text-white rounded-br-sm whitespace-pre-line'
                         : 'bg-white text-gray-700 rounded-bl-sm shadow-sm border border-gray-100'
                     }`}
                     style={msg.role === 'user' ? { background: '#7B1113' } : {}}
                   >
-                    {msg.text}
+                    {msg.role === 'user' ? (
+                      msg.text
+                    ) : (
+                      <div className="chat-markdown">
+                        <ReactMarkdown
+                          components={{
+                            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                            ul: ({ children }) => <ul className="my-2 space-y-1 pl-1">{children}</ul>,
+                            ol: ({ children }) => <ol className="my-2 space-y-1 pl-4 list-decimal">{children}</ol>,
+                            li: ({ children }) => (
+                              <li className="flex gap-2">
+                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#C9A84C' }} />
+                                <span className="flex-1">{children}</span>
+                              </li>
+                            ),
+                            strong: ({ children }) => <strong className="font-semibold" style={{ color: '#7B1113' }}>{children}</strong>,
+                            a: ({ children, href }) => (
+                              <a href={href} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#7B1113' }}>{children}</a>
+                            ),
+                          }}
+                        >
+                          {msg.text}
+                        </ReactMarkdown>
+                      </div>
+                    )}
                   </div>
                   {msg.fallback && (
                     <p className="flex items-center gap-1 text-[10px] text-amber-600 mt-1 pl-1">
