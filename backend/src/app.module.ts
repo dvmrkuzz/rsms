@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import appConfig from './config/app.config';
@@ -34,22 +34,41 @@ import { AssistantModule } from './modules/assistant/assistant.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get('database.host'),
-        port: config.get<number>('database.port'),
-        username: config.get('database.username'),
-        password: config.get('database.password'),
-        database: config.get('database.name'),
-        entities: [
-          User, DocumentType, ServiceRequest,
-          VisitorLog, AuditLog, Inquiry, Announcement, FAQ,
-        ],
-        migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
-        synchronize: false,
-        logging: config.get('nodeEnv') === 'development',
-        ssl: false,
-      }),
+      useFactory: (config: ConfigService): TypeOrmModuleOptions => {
+        const databaseUrl = process.env.DATABASE_URL;
+        const isDev = config.get('nodeEnv') === 'development';
+
+        const shared = {
+          type: 'postgres' as const,
+          entities: [
+            User, DocumentType, ServiceRequest,
+            VisitorLog, AuditLog, Inquiry, Announcement, FAQ,
+          ],
+          migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
+          synchronize: false,
+          logging: isDev,
+        };
+
+        if (databaseUrl) {
+          // Railway / production: single connection string, SSL required
+          return {
+            ...shared,
+            url: databaseUrl,
+            ssl: { rejectUnauthorized: false },
+          };
+        }
+
+        // Local development: separate variables, no SSL
+        return {
+          ...shared,
+          host: config.get('database.host'),
+          port: config.get<number>('database.port'),
+          username: config.get('database.username'),
+          password: config.get('database.password'),
+          database: config.get<string>('database.name'),
+          ssl: false,
+        };
+      },
     }),
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60000, limit: 20 }]),
     AuditModule,
