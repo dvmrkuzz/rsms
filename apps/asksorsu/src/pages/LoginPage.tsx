@@ -19,7 +19,8 @@ export default function LoginPage() {
   })
 
   const handleGoogle = () => {
-    window.location.href = '/api/v1/auth/google'
+    const apiUrl = import.meta.env.VITE_API_URL ?? '/api/v1'
+    window.location.href = `${apiUrl}/auth/google`
   }
 
   const handleGuest = () => {

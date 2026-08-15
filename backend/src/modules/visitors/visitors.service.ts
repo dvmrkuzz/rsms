@@ -192,6 +192,13 @@ export class VisitorsService {
     });
   }
 
+  async getDocumentTypes() {
+  return this.documentTypeRepository.find({
+    where: { isActive: true },
+    order: { name: 'ASC' },
+  });
+}
+
   async getTodayStats() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);

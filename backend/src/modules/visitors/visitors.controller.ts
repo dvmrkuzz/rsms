@@ -55,6 +55,11 @@ export class VisitorsController {
     return this.visitorsService.findOne(id);
   }
 
+  @Get('document-types')
+getDocumentTypes() {
+  return this.visitorsService.getDocumentTypes();
+}
+
   @Patch(':id/serve')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.STAFF)
