@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FileText, Package, ArrowRight, Loader2 } from 'lucide-react'
+import { FileText, Package, ArrowRight, } from 'lucide-react'
 import logo from '../assets/logo.png'
-
 interface PersonalDetails {
   firstName: string
   lastName: string

@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/auth.store'
 import { useDashboardAlerts } from '../../hooks/useDashboardAlerts'
 import ToastStack from '../notifications/ToastStack'
 import logo from '../../assets/logo.png'
+import FeedbackButton from '../FeedBackButton'
 
 const dailyTaskNavItems = [
   { to: '/dashboard', label: 'Overview', icon: LayoutDashboard, end: true },
@@ -167,11 +168,13 @@ export default function DashboardLayout() {
           </div>
         </header>
 
-        {/* Page content */}
+               {/* Page content */}
         <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
           <Outlet />
         </main>
       </div>
+
+      <FeedbackButton />
     </div>
   )
 }
