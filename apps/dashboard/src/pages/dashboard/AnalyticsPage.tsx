@@ -4,7 +4,7 @@ import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
-import { BarChart2, TrendingUp, FileText, Calendar, Sparkles, Loader2 } from 'lucide-react'
+import { BarChart2, TrendingUp, FileText, Calendar, Sparkles, Loader2, Printer } from 'lucide-react'
 import api from '../../lib/api'
 import PageHeader from '../../components/ui/PageHeader'
 import StatCard from '../../components/ui/StatCard'
@@ -54,8 +54,25 @@ export default function AnalyticsPage() {
   const topDocument = documentStats?.[0]?.name ?? '—'
   const peakDay = peakDays?.[0]?.day ?? '—'
 
+  const reportDate = new Date().toLocaleDateString('en-PH', {
+    year: 'numeric', month: 'long', day: 'numeric',
+  })
+
   return (
     <div className="space-y-5">
+      {/* Print stylesheet: only the report prints */}
+      <style>{`
+        @media print {
+          @page { size: A4; margin: 18mm; }
+          body * { visibility: hidden; }
+          #printable-report, #printable-report * { visibility: visible; }
+          #printable-report {
+            position: absolute; left: 0; top: 0; width: 100%;
+            color: #000; background: #fff;
+          }
+          .no-print { display: none !important; }
+        }
+      `}</style>
 
       <PageHeader
         title="Analytics & Reports"
@@ -65,7 +82,7 @@ export default function AnalyticsPage() {
             <button
               onClick={() => generateReport.mutate()}
               disabled={generateReport.isPending}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-lg text-sm font-semibold hover:bg-red-50 transition disabled:opacity-60"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-lg text-sm font-semibold shadow-sm hover:bg-gray-50 transition"
               style={{ color: '#7B1113' }}
             >
               {generateReport.isPending
@@ -79,7 +96,7 @@ export default function AnalyticsPage() {
       />
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-4 gap-4 no-print">
         <StatCard
           icon={<FileText className="w-6 h-6" style={{ color: '#7B1113' }} />}
           bg="bg-[#F9F0F0]"
@@ -109,9 +126,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Charts Row 1 */}
-      <div className="grid grid-cols-2 gap-5">
-
-        {/* Requests by Document Type */}
+      <div className="grid grid-cols-2 gap-5 no-print">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
           <h3 className="font-bold text-gray-800 mb-4">Requests by Document Type</h3>
           <ResponsiveContainer width="100%" height={220}>
@@ -126,7 +141,6 @@ export default function AnalyticsPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* Requests by Status */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
           <h3 className="font-bold text-gray-800 mb-4">Requests by Status</h3>
           <ResponsiveContainer width="100%" height={220}>
@@ -153,7 +167,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Monthly Trend */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 no-print">
         <h3 className="font-bold text-gray-800 mb-4">Monthly Trend (Last 6 Months)</h3>
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={monthlyTrend ?? []} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
@@ -162,14 +176,14 @@ export default function AnalyticsPage() {
             <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
             <Tooltip />
             <Legend iconSize={10} />
-            <Line type="monotone" dataKey="requests" name="Requests" stroke="#7B1113" strokeWidth={2} dot={{ r: 4 }} />
-            <Line type="monotone" dataKey="released" name="Released" stroke="#C9A84C" strokeWidth={2} dot={{ r: 4 }} />
+            <Line type="monotone" dataKey="requests" name="Requests" stroke="#7B1113" strokeWidth={2} />
+            <Line type="monotone" dataKey="released" name="Released" stroke="#C9A84C" strokeWidth={2} />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       {/* Visitor Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-4 no-print">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
           <p className="text-sm text-gray-500 mb-1">Total Visitors Logged</p>
           <p className="text-3xl font-black text-gray-800">{visitorStats?.total ?? 0}</p>
@@ -184,31 +198,66 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* AI Report */}
+      {/* AI Report error */}
       {generateReport.isError && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-red-700 text-sm">
-          Failed to generate report. Check that GEMINI_API_KEY is set in the backend .env file.
+        <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-red-700 text-sm no-print">
+          Failed to generate report. Check that ANTHROPIC_API_KEY is set in the backend .env file.
         </div>
       )}
 
+      {/* AI Report — printable */}
       {aiReport && (
-        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+        <div id="printable-report" className="bg-white rounded-xl border shadow-sm overflow-hidden">
+          {/* Header banner */}
           <div
-            className="px-5 py-4 flex items-center gap-3"
+            className="px-5 py-4 flex items-center justify-between gap-3"
             style={{ background: 'linear-gradient(135deg, #7B1113 0%, #A01515 100%)' }}
           >
-            <div className="absolute bottom-0 left-0 right-0 h-0.5"
-              style={{ background: 'linear-gradient(90deg, #C9A84C, #F0D080, #C9A84C)' }} />
-            <Sparkles className="w-5 h-5 text-white" />
-            <div>
-              <p className="font-bold text-white text-sm">AI-Generated Narrative Report</p>
-              <p className="text-white/60 text-xs">Powered by Google Gemini — {new Date().toLocaleDateString('en-PH', { dateStyle: 'long' })}</p>
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-5 h-5 text-white" />
+              <div>
+                <p className="font-bold text-white text-sm">AI-Generated Narrative Report</p>
+                <p className="text-white/60 text-xs">Registrar's Office · SorSU Bulan · {reportDate}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => window.print()}
+              className="no-print flex items-center gap-2 bg-white/15 hover:bg-white/25 text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+            >
+              <Printer className="w-4 h-4" />
+              Print / Save PDF
+            </button>
+          </div>
+          <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, #C9A84C, #F0D080, #C9A84C)' }} />
+
+          {/* Highlighted key metrics */}
+          <div className="grid grid-cols-4 gap-3 px-6 pt-5">
+            <div className="rounded-lg p-3 text-center" style={{ background: '#F9F0F0' }}>
+              <p className="text-2xl font-black" style={{ color: '#7B1113' }}>{requestStats?.total ?? 0}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Total Requests</p>
+            </div>
+            <div className="rounded-lg p-3 text-center bg-green-50">
+              <p className="text-2xl font-black text-green-700">{requestStats?.completionRate ?? 0}%</p>
+              <p className="text-xs text-gray-500 mt-0.5">Completion Rate</p>
+            </div>
+            <div className="rounded-lg p-3 text-center bg-amber-50">
+              <p className="text-2xl font-black text-amber-600">{requestStats?.byStatus?.pending ?? 0}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Pending</p>
+            </div>
+            <div className="rounded-lg p-3 text-center bg-blue-50">
+              <p className="text-2xl font-black text-blue-700">{visitorStats?.total ?? 0}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Visitors Logged</p>
             </div>
           </div>
+
+          {/* Narrative */}
           <div className="px-6 py-5">
             <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-line">
               {aiReport}
             </div>
+            <p className="text-xs text-gray-400 mt-6 pt-4 border-t">
+              Generated by the RSMS analytics assistant (Claude) on {reportDate}. Figures are drawn directly from the system database.
+            </p>
           </div>
         </div>
       )}
