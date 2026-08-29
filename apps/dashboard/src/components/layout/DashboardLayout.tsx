@@ -6,6 +6,7 @@ import { useDashboardAlerts } from '../../hooks/useDashboardAlerts'
 import ToastStack from '../notifications/ToastStack'
 import logo from '../../assets/logo.png'
 import FeedbackButton from '../FeedBackButton'
+import WhatsNewModal from '../WhatsNewModal'
 
 const dailyTaskNavItems = [
   { to: '/dashboard', label: 'Overview', icon: LayoutDashboard, end: true },
@@ -175,6 +176,7 @@ export default function DashboardLayout() {
       </div>
 
       <FeedbackButton />
+      <WhatsNewModal />
     </div>
   )
 }
