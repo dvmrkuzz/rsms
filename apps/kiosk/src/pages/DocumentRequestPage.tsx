@@ -52,9 +52,10 @@ export default function DocumentRequestPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [successData, setSuccessData] = useState<SuccessData | null>(null)
-  const [requestDetails, setRequestDetails] = useState({
+    const [requestDetails, setRequestDetails] = useState({
     copies: 1,
     purpose: '',
+    email: '',
   })
 
   useEffect(() => {
@@ -73,13 +74,14 @@ export default function DocumentRequestPage() {
     setStep('request-details')
   }
 
-  const handleSubmit = async () => {
-    if (!fullName || !selectedDoc || !requestDetails.purpose.trim()) return
+   const handleSubmit = async () => {
+    if (!fullName || !selectedDoc || !requestDetails.purpose.trim() || !requestDetails.email.trim()) return
     setSubmitting(true)
     setError('')
     try {
       const res = await api.post('/visitors/checkin', {
         visitorName: fullName,
+        email: requestDetails.email.trim(),
         studentId: idNumber || undefined,
         contactNumber: contactNumber || undefined,
         purpose: 'document_request',
@@ -302,9 +304,25 @@ export default function DocumentRequestPage() {
               <p className="text-sm text-gray-500">{contactNumber}{idNumber ? ` · ID: ${idNumber}` : ''}</p>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
+                        <div className="bg-white rounded-2xl shadow-sm borderborder-gray-100 p-6 space-y-5">
               <div>
                 <label className="block text-base font-bold mb-2" style={{ color: '#7B1113' }}>
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  value={requestDetails.email}
+                  onChange={e => setRequestDetails(d => ({ ...d, email: e.target.value }))}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-base focus:outline-none focus:border-red-800 transition"
+                  placeholder="your.email@gmail.com"
+                />
+                <p className="text-xs text-gray-400 mt-1.5">
+                  Use your Google email so you can track this request when you log in to the portal.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-base font-bold mb-2"style={{ color: '#7B1113' }}>
                   Number of Copies *
                 </label>
                 <div className="flex items-center gap-4">

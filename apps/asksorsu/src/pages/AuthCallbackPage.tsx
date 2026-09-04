@@ -19,7 +19,7 @@ export default function AuthCallbackPage() {
     api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } })
       .then(res => {
         setAuth(res.data, token)
-        navigate('/')
+        navigate('/my-requests')
       })
       .catch(() => navigate('/login'))
     // eslint-disable-next-line react-hooks/exhaustive-deps

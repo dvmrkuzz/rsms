@@ -39,8 +39,9 @@ export class VisitorsService {
     return `RSMS-${year}${month}${day}-${random}`;
   }
 
-  async kioskCheckin(dto: {
+    async kioskCheckin(dto: {
     visitorName: string;
+    email?: string;
     contactNumber?: string;
     studentId?: string;
     purpose: string;
@@ -59,13 +60,14 @@ export class VisitorsService {
       if (docType) {
         trackingNumber = this.generateTrackingNumber();
 
-        const serviceRequest = this.requestRepository.create({
+                 const serviceRequest = this.requestRepository.create({
           documentTypeId: dto.documentTypeId,
           status: RequestStatus.PENDING,
           copies: 1,
           purpose: 'Walk-in kiosk request',
           trackingNumber,
           remarks: dto.notes,
+          requesterEmail: dto.email ?? null,
         });
 
         await this.requestRepository.save(serviceRequest);

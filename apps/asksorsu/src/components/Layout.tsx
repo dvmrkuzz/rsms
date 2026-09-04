@@ -1,20 +1,23 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { Home, Megaphone, Search, Menu, X, LogOut, UserCircle } from 'lucide-react'
+import { Home, Megaphone, Search, Menu, X, LogOut, UserCircle, FileText } from 'lucide-react'
 import logo from '../assets/logo.png'
 import ChatWidget from './ChatWidget'
 import { useAuthStore } from '../store/auth.store'
-
-const navItems = [
-  { to: '/', label: 'Home', icon: Home, end: true },
-  { to: '/announcements', label: 'Announcements', icon: Megaphone },
-  { to: '/track', label: 'Track', icon: Search },
-]
 
 export default function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const navigate = useNavigate()
   const { user, isAuthenticated, clearAuth } = useAuthStore()
+
+  const navItems = [
+    { to: '/', label: 'Home', icon: Home, end: true },
+    { to: '/announcements', label: 'Announcements', icon: Megaphone },
+    { to: '/track', label: 'Track', icon: Search },
+        ...(isAuthenticated
+      ? [{ to: '/my-requests', label: 'My Requests', icon: FileText, end: false }]
+      : []),
+  ]
 
   const handleSignOut = () => {
     clearAuth()

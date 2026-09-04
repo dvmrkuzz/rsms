@@ -35,7 +35,7 @@ import {
       @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
       @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     ) {
-      return this.servicesService.findMyRequests(user.id, page, limit);
+            return this.servicesService.findMyRequests(user, page, limit);
     }
   
     @Public()

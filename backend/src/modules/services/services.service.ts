@@ -96,9 +96,35 @@ import {
       return this.sanitizeRequest(request);
     }
   
-    async findMyRequests(userId: string, page = 1, limit = 10) {
-      return this.findAll(page, limit, undefined, userId);
+     async findMyRequests(user: User, page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
+
+    // Match requests linked to this account (userId) OR made at the kiosk
+    // with this user's email (requesterEmail).
+    const qb = this.requestRepository
+      .createQueryBuilder('req')
+      .leftJoinAndSelect('req.user', 'user')
+      .leftJoinAndSelect('req.documentType', 'documentType')
+      .where('req.user_id = :userId', { userId: user.id });
+
+    if (user.email) {
+      qb.orWhere('req.requester_email = :email', { email: user.email });
     }
+
+    const [requests, total] = await qb
+      .orderBy('req.requested_at', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      data: requests.map((r) => this.sanitizeRequest(r)),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
   
     async create(
       dto: CreateServiceRequestDto,

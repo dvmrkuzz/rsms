@@ -24,6 +24,9 @@ import {
     @Column({ name: 'user_id', nullable: true })
     userId: string | null;
 
+    @Column({ name: 'requester_email', type: 'varchar', nullable: true })
+    requesterEmail: string | null;
+
     @Column({ name: 'document_type_id' })
     documentTypeId: string;
 
