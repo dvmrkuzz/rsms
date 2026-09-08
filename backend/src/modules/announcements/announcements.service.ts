@@ -79,6 +79,7 @@ export class AnnouncementsService {
       target: dto.target,
       createdById: user.id,
       expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
+      imageBase64: dto.imageBase64 ?? null,
     });
     return this.announcementRepository.save(announcement);
   }
@@ -91,6 +92,8 @@ export class AnnouncementsService {
       ...(dto.target && { target: dto.target }),
       ...(dto.isActive !== undefined && { isActive: dto.isActive }),
       ...(dto.expiresAt && { expiresAt: new Date(dto.expiresAt) }),
+      ...(dto.imageBase64 !== undefined && { imageBase64: dto.imageBase64 }),
+
     });
     return this.findOne(id);
   }

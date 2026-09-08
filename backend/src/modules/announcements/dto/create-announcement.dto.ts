@@ -19,4 +19,9 @@ import {
     @IsOptional()
     @IsDateString()
     expiresAt?: string;
+
+    @IsOptional()
+    @IsString()
+    imageBase64?: string;
+    
   }

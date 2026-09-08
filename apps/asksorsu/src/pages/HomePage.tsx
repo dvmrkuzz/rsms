@@ -159,6 +159,14 @@ export default function HomePage() {
                     <p className="text-sm text-gray-600 leading-relaxed">{a.content}</p>
                   </div>
 
+                     {a.imageBase64 && (
+                    <img
+                      src={a.imageBase64}
+                      alt={a.title}
+                      className="mt-4 rounded-xl border border-gray-100 w-full object-contain"
+                    />
+                  )}
+                  
                   {a.expiresAt && (
                     <div className="mt-3 flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg w-fit">
                       <Clock className="w-3 h-3" />

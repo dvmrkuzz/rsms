@@ -26,6 +26,9 @@ import {
     @Column({ type: 'text' })
     content: string;
   
+    @Column({ name: 'image_base64', type: 'text', nullable: true })
+    imageBase64: string | null;
+    
     @Column({
       type: 'enum',
       enum: AnnouncementTarget,

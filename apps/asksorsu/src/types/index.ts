@@ -63,6 +63,7 @@ export interface Announcement {
   id: string
   title: string
   content: string
+  imageBase64?: string | null
   target: 'all' | 'students' | 'staff' | 'kiosk'
   isActive: boolean
   expiresAt?: string

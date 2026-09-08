@@ -16,7 +16,7 @@ const TARGET_COLORS: Record<string, string> = {
 export default function AnnouncementsPage() {
   const queryClient = useQueryClient()
   const [showCreate, setShowCreate] = useState(false)
-  const [form, setForm] = useState({ title: '', content: '', target: 'all', expiresAt: '' })
+  const [form, setForm] = useState({ title: '', content: '', target: 'all', expiresAt: '', imageBase64: '' })
 
   const { data, isLoading } = useQuery({
     queryKey: ['announcements'],
@@ -28,7 +28,7 @@ export default function AnnouncementsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['announcements'] })
       setShowCreate(false)
-      setForm({ title: '', content: '', target: 'all', expiresAt: '' })
+      setForm({ title: '', content: '', target: 'all', expiresAt: '', imageBase64: '' })
     },
   })
 
@@ -36,6 +36,30 @@ export default function AnnouncementsPage() {
     mutationFn: (id: string) => api.patch(`/announcements/${id}/deactivate`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['announcements'] }),
   })
+
+   const [imageError, setImageError] = useState('')
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImageError('')
+
+    if (!file.type.startsWith('image/')) {
+      setImageError('Please choose an image file.')
+      return
+    }
+    // ~1MB limit to keep the database lean
+    if (file.size > 1024 * 1024) {
+      setImageError('Image is too large. Please use an image under 1MB.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setForm(f => ({ ...f, imageBase64: reader.result as string }))
+    }
+    reader.readAsDataURL(file)
+  }
 
   return (
     <div className="space-y-5">
@@ -132,6 +156,29 @@ export default function AnnouncementsPage() {
                   <input type="date" value={form.expiresAt} onChange={e => setForm({ ...form, expiresAt: e.target.value })}
                     className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-800" />
                 </div>
+                  <div>
+                <label className="block text-sm font-semibold mb-1.5" style={{ color: '#7B1113' }}>Image (optional)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-800 hover:file:bg-red-100"
+                />
+                {imageError && <p className="text-xs text-red-600 mt-1">{imageError}</p>}
+                {form.imageBase64 && (
+                  <div className="mt-2 relative inline-block">
+                    <img src={form.imageBase64} alt="Preview" className="max-h-40 rounded-lg border border-gray-200" />
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, imageBase64: '' }))}
+                      className="absolute top-1 right-1 bg-white/90 rounded-full px-2 py-0.5 text-xs font-semibold text-red-700 shadow"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+                <p className="text-xs text-gray-400 mt-1">Max 1MB. Posters/images will show on the public portal.</p>
+              </div>
               </div>
             </div>
             <div className="flex gap-3 mt-6">

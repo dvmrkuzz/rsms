@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Search, Cog, Send, PackageCheck, CheckCircle, XCircle, FileText, ArrowRight } from 'lucide-react'
+import { Search, FileText, ArrowRight, ChevronDown } from 'lucide-react'
 import api from '../../lib/api'
 import PageHeader from '../../components/ui/PageHeader'
 import type { ServiceRequest, RequestStatus } from '../../types'
@@ -29,21 +29,13 @@ const STATUS_OPTIONS: RequestStatus[] = [
   'pending', 'processing', 'forwarded_to_main', 'ready_for_pickup', 'released', 'cancelled', 'rejected'
 ]
 
-const NEXT_ACTIONS: Partial<Record<RequestStatus, { to: RequestStatus; label: string; icon: any }[]>> = {
-  pending: [
-    { to: 'processing', label: 'Process Here', icon: Cog },
-    { to: 'forwarded_to_main', label: 'Send to Main Campus', icon: Send },
-  ],
-  processing: [
-    { to: 'ready_for_pickup', label: 'Ready for Pickup', icon: PackageCheck },
-    { to: 'forwarded_to_main', label: 'Send to Main Campus', icon: Send },
-  ],
-  forwarded_to_main: [
-    { to: 'ready_for_pickup', label: 'Arrived — Ready', icon: PackageCheck },
-  ],
-  ready_for_pickup: [
-    { to: 'released', label: 'Mark Released', icon: CheckCircle },
-  ],
+// Valid next statuses staff can move a request to (mirrors backend rules).
+// 'rejected' is handled separately via the reason modal.
+const NEXT_STATUSES: Partial<Record<RequestStatus, RequestStatus[]>> = {
+  pending: ['processing', 'forwarded_to_main'],
+  processing: ['ready_for_pickup', 'forwarded_to_main'],
+  forwarded_to_main: ['ready_for_pickup'],
+  ready_for_pickup: ['released'],
 }
 
 const CAN_REJECT: RequestStatus[] = ['pending', 'processing', 'forwarded_to_main']
@@ -55,14 +47,18 @@ export default function ServiceRequestsPage() {
   const [page, setPage] = useState(1)
   const [rejectTarget, setRejectTarget] = useState<ServiceRequest | null>(null)
   const [rejectionReason, setRejectionReason] = useState('')
+  // Confirmation popup state
+  const [confirmTarget, setConfirmTarget] = useState<{ req: ServiceRequest; to: RequestStatus } | null>(null)
 
-  const { data, isLoading } = useQuery({
+    const { data, isLoading } = useQuery({
     queryKey: ['service-requests', statusFilter, page],
     queryFn: () =>
       api.get('/service-requests', {
         params: { page, limit: 15, ...(statusFilter && { status: statusFilter }) },
       }).then(r => r.data),
-    refetchInterval: 15000,
+    refetchInterval: 5000,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
   })
 
   const updateStatus = useMutation({
@@ -73,8 +69,19 @@ export default function ServiceRequestsPage() {
       queryClient.invalidateQueries({ queryKey: ['requests-summary'] })
       setRejectTarget(null)
       setRejectionReason('')
+      setConfirmTarget(null)
     },
   })
+
+  // Handle dropdown selection
+  const handleSelect = (req: ServiceRequest, value: string) => {
+    if (!value) return
+    if (value === 'rejected') {
+      setRejectTarget(req)
+    } else {
+      setConfirmTarget({ req, to: value as RequestStatus })
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -82,7 +89,7 @@ export default function ServiceRequestsPage() {
       <PageHeader
         icon={FileText}
         title="Service Requests"
-        subtitle="Click a button in the Next Step column to move a request forward — it updates right away."
+        subtitle="Use the dropdown in the Update Status column to move a request forward."
       />
 
       {/* Workflow guide */}
@@ -143,7 +150,7 @@ export default function ServiceRequestsPage() {
                 <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wide" style={{ color: '#7B1113' }}>Document</th>
                 <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wide" style={{ color: '#7B1113' }}>Student</th>
                 <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wide" style={{ color: '#7B1113' }}>Status</th>
-                <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wide" style={{ color: '#7B1113' }}>Next Step</th>
+                <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wide" style={{ color: '#7B1113' }}>Update Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -156,57 +163,59 @@ export default function ServiceRequestsPage() {
                   ?.filter((r: ServiceRequest) =>
                     !search || r.trackingNumber.toLowerCase().includes(search.toLowerCase())
                   )
-                  .map((req: ServiceRequest) => (
-                    <tr key={req.id} className="hover:bg-red-50/30 transition-colors">
-                      <td className="px-5 py-3">
-                        <p className="font-mono text-xs text-gray-700">{req.trackingNumber}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          {req.copies} {req.copies === 1 ? 'copy' : 'copies'} · {new Date(req.requestedAt).toLocaleDateString()}
-                        </p>
-                      </td>
-                      <td className="px-5 py-3 text-gray-700">{req.documentType?.name ?? '—'}</td>
-                      <td className="px-5 py-3 text-gray-700">
-                        {req.user ? `${req.user.firstName} ${req.user.lastName}` : (
-                          <span className="text-xs text-gray-400 italic">Walk-in (Kiosk)</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${STATUS_COLORS[req.status]}`}>
-                          {STATUS_LABELS[req.status]}
-                        </span>
-                        {req.status === 'rejected' && req.rejectionReason && (
-                          <p className="text-xs text-gray-400 mt-1 max-w-48 truncate" title={req.rejectionReason}>
-                            {req.rejectionReason}
+                  .map((req: ServiceRequest) => {
+                    const nextOptions = NEXT_STATUSES[req.status] ?? []
+                    const canReject = CAN_REJECT.includes(req.status)
+                    const hasActions = nextOptions.length > 0 || canReject
+                    return (
+                      <tr key={req.id} className="hover:bg-red-50/30 transition-colors">
+                        <td className="px-5 py-3">
+                          <p className="font-mono text-xs text-gray-700">{req.trackingNumber}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {req.copies} {req.copies === 1 ? 'copy' : 'copies'} · {new Date(req.requestedAt).toLocaleDateString()}
                           </p>
-                        )}
-                      </td>
-                      <td className="px-5 py-3">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {(NEXT_ACTIONS[req.status] ?? []).map(({ to, label, icon: Icon }) => (
-                            <button
-                              key={to}
-                              onClick={() => updateStatus.mutate({ id: req.id, status: to })}
-                              disabled={updateStatus.isPending}
-                              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg text-white disabled:opacity-50 transition hover:opacity-90 whitespace-nowrap"
-                              style={{ background: '#7B1113' }}
-                            >
-                              <Icon className="w-3.5 h-3.5" />
-                              {label}
-                            </button>
-                          ))}
-                          {CAN_REJECT.includes(req.status) && (
-                            <button
-                              onClick={() => setRejectTarget(req)}
-                              className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg text-red-700 bg-red-50 hover:bg-red-100 transition"
-                            >
-                              <XCircle className="w-3.5 h-3.5" />
-                              Reject
-                            </button>
+                        </td>
+                        <td className="px-5 py-3 text-gray-700">{req.documentType?.name ?? '—'}</td>
+                        <td className="px-5 py-3 text-gray-700">
+                          {req.user ? `${req.user.firstName} ${req.user.lastName}` : (
+                            <span className="text-xs text-gray-400 italic">Walk-in (Kiosk)</span>
                           )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                        <td className="px-5 py-3">
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${STATUS_COLORS[req.status]}`}>
+                            {STATUS_LABELS[req.status]}
+                          </span>
+                          {req.status === 'rejected' && req.rejectionReason && (
+                            <p className="text-xs text-gray-400 mt-1 max-w-48 truncate" title={req.rejectionReason}>
+                              {req.rejectionReason}
+                            </p>
+                          )}
+                        </td>
+                        <td className="px-5 py-3">
+                          {hasActions ? (
+                            <div className="relative inline-block">
+                              <select
+                                value=""
+                                onChange={(e) => handleSelect(req, e.target.value)}
+                                disabled={updateStatus.isPending}
+                                className="appearance-none text-xs font-semibold pl-3 pr-8 py-2 rounded-lg border-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-800 disabled:opacity-50"
+                                style={{ borderColor: '#7B1113', color: '#7B1113' }}
+                              >
+                                <option value="">Change status…</option>
+                                {nextOptions.map((s) => (
+                                  <option key={s} value={s}>→ {STATUS_LABELS[s]}</option>
+                                ))}
+                                {canReject && <option value="rejected">✕ Reject request</option>}
+                              </select>
+                              <ChevronDown className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#7B1113' }} />
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400 italic">No action needed</span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })
               )}
             </tbody>
           </table>
@@ -225,6 +234,41 @@ export default function ServiceRequestsPage() {
         )}
       </div>
 
+      {/* Confirmation popup for normal status changes */}
+      {confirmTarget && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div className="h-1 w-10 rounded mb-4" style={{ background: '#7B1113' }} />
+            <h3 className="font-bold text-gray-800 mb-1">Confirm Status Change</h3>
+            <p className="text-sm text-gray-500 mb-4 font-mono">{confirmTarget.req.trackingNumber}</p>
+            <div className="flex items-center gap-2 mb-5 text-sm">
+              <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[confirmTarget.req.status]}`}>
+                {STATUS_LABELS[confirmTarget.req.status]}
+              </span>
+              <ArrowRight className="w-4 h-4 text-gray-400" />
+              <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[confirmTarget.to]}`}>
+                {STATUS_LABELS[confirmTarget.to]}
+              </span>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmTarget(null)}
+                className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm hover:bg-gray-50">
+                Cancel
+              </button>
+              <button
+                onClick={() => updateStatus.mutate({ id: confirmTarget.req.id, status: confirmTarget.to })}
+                disabled={updateStatus.isPending}
+                className="flex-1 px-4 py-2.5 text-white rounded-lg text-sm disabled:opacity-50"
+                style={{ background: '#7B1113' }}
+              >
+                {updateStatus.isPending ? 'Updating...' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reject reason modal */}
       {rejectTarget && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">

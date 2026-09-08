@@ -65,6 +65,10 @@ export default function AnnouncementsPage() {
                     </span>
                   </div>
                   <p className="text-sm text-gray-600 leading-relaxed">{a.content}</p>
+                  {a.imageBase64 && (
+                    <img src = {a.imageBase64} alt = {a.title} 
+                  className = "mt-3 rounded-xl border border-gray-100 max-w-full w-full object-contain"/>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-1 mt-4 text-xs text-gray-400">
