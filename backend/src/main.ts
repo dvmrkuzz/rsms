@@ -3,12 +3,19 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
+import { json, urlencoded } from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bodyParser: true,
+  });
   const config = app.get(ConfigService);
   const port = config.get<number>('port') ?? 3000;
   const nodeEnv = config.get<string>('nodeEnv');
+
+  // Raise body size limit so base64 announcement images fit (default is ~100KB)
+  app.use(json({ limit: '5mb' }));
+  app.use(urlencoded({ extended: true, limit: '5mb' }));
 
   app.use(
     helmet({
