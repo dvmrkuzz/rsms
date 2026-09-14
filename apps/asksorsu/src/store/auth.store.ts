@@ -40,9 +40,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ user, token, isAuthenticated: true })
   },
 
-  clearAuth: () => {
+    clearAuth: () => {
     localStorage.removeItem('rsms_token')
     localStorage.removeItem('rsms_user')
+    sessionStorage.removeItem('rsms_pin_unlocked')
     set({ user: null, token: null, isAuthenticated: false })
   },
 }))

@@ -11,13 +11,13 @@ import {
   import * as bcrypt from 'bcrypt';
   import { User, UserRole } from '../../database/entities/user.entity';
   import { LoginDto, RegisterDto } from './dto';
-  
+
   export interface JwtPayload {
     sub: string;
     email: string;
     role: UserRole;
   }
-  
+
   export interface AuthResponse {
     accessToken: string;
     user: {
@@ -29,7 +29,7 @@ import {
       studentId?: string;
     };
   }
-  
+
   @Injectable()
   export class AuthService {
     constructor(
@@ -38,14 +38,12 @@ import {
       private readonly jwtService: JwtService,
       private readonly configService: ConfigService,
     ) {}
-  
+
     async login(dto: LoginDto): Promise<AuthResponse> {
       const user = await this.userRepository.findOne({
         where: { email: dto.email, isActive: true },
       });
 
-      // Accounts created via Google have no passwordHash — bcrypt.compare
-      // would throw on a null hash, so treat that the same as a wrong password.
       if (!user || !user.passwordHash) {
         throw new UnauthorizedException('Invalid email or password');
       }
@@ -56,21 +54,20 @@ import {
         throw new UnauthorizedException('Invalid email or password');
       }
 
-      // Update last login
       await this.userRepository.update(user.id, { lastLoginAt: new Date() });
 
       return this.buildAuthResponse(user);
     }
-  
+
     async register(dto: RegisterDto): Promise<AuthResponse> {
       const existing = await this.userRepository.findOne({
         where: { email: dto.email },
       });
-  
+
       if (existing) {
         throw new ConflictException('An account with this email already exists');
       }
-  
+
       if (dto.studentId) {
         const existingStudent = await this.userRepository.findOne({
           where: { studentId: dto.studentId },
@@ -79,10 +76,10 @@ import {
           throw new ConflictException('This student ID is already registered');
         }
       }
-  
+
       const rounds = this.configService.get<number>('bcrypt.rounds') ?? 12;
       const passwordHash = await bcrypt.hash(dto.password, rounds);
-  
+
       const user = this.userRepository.create({
         firstName: dto.firstName,
         lastName: dto.lastName,
@@ -91,7 +88,7 @@ import {
         studentId: dto.studentId?.trim() || undefined,
         role: UserRole.STUDENT,
       });
-  
+
       const saved = await this.userRepository.save(user);
 
       return this.buildAuthResponse(saved);
@@ -108,8 +105,6 @@ import {
       });
       if (user) return user;
 
-      // Same email registered via password first — link the Google identity
-      // to that existing account rather than creating a duplicate.
       user = await this.userRepository.findOne({ where: { email: profile.email } });
       if (user) {
         await this.userRepository.update(user.id, { googleId: profile.googleId });
@@ -155,24 +150,54 @@ import {
       const user = await this.userRepository.findOne({
         where: { id: userId, isActive: true },
       });
-  
+
       if (!user) {
         throw new NotFoundException('User not found');
       }
-  
+
       const { passwordHash: _, ...result } = user;
       return result as Omit<User, 'passwordHash'>;
     }
-  
+
     async validateUser(payload: JwtPayload): Promise<User> {
       const user = await this.userRepository.findOne({
         where: { id: payload.sub, isActive: true },
       });
-  
+
       if (!user) {
         throw new UnauthorizedException('User no longer exists or is inactive');
       }
-  
+
       return user;
+    }
+
+    // ---- PIN ----
+
+    async hasPin(userId: string): Promise<{ hasPin: boolean }> {
+      const user = await this.userRepository.findOne({ where: { id: userId } });
+      if (!user) throw new NotFoundException('User not found');
+      return { hasPin: !!user.pinHash };
+    }
+
+    async setPin(userId: string, pin: string): Promise<{ message: string }> {
+      if (!/^\d{6}$/.test(pin)) {
+        throw new UnauthorizedException('PIN must be exactly 6 digits');
+      }
+      const rounds = this.configService.get<number>('bcrypt.rounds') ?? 12;
+      const pinHash = await bcrypt.hash(pin, rounds);
+      await this.userRepository.update(userId, { pinHash });
+      return { message: 'PIN set successfully' };
+    }
+
+    async verifyPin(userId: string, pin: string): Promise<{ valid: boolean }> {
+      const user = await this.userRepository.findOne({ where: { id: userId } });
+      if (!user || !user.pinHash) {
+        throw new UnauthorizedException('No PIN set for this account');
+      }
+      const valid = await bcrypt.compare(pin, user.pinHash);
+      if (!valid) {
+        throw new UnauthorizedException('Incorrect PIN');
+      }
+      return { valid: true };
     }
   }

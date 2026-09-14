@@ -36,6 +36,26 @@ import {
       return this.authService.getMe(user.id);
     }
 
+    @Get('has-pin')
+    @UseGuards(JwtAuthGuard)
+    async hasPin(@CurrentUser() user: User) {
+      return this.authService.hasPin(user.id);
+    }
+
+    @Post('set-pin')
+    @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.OK)
+    async setPin(@CurrentUser() user: User, @Body('pin') pin: string) {
+      return this.authService.setPin(user.id, pin);
+    }
+
+    @Post('verify-pin')
+    @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.OK)
+    async verifyPin(@CurrentUser() user: User, @Body('pin') pin: string) {
+      return this.authService.verifyPin(user.id, pin);
+    }
+
     @Get('google')
     @UseGuards(AuthGuard('google'))
     googleAuth() {
