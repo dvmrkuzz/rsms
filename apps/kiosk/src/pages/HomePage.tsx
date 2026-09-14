@@ -30,9 +30,15 @@ export default function HomePage() {
     hour: '2-digit', minute: '2-digit', second: '2-digit',
   })
 
-  const handleProceed = () => {
+      const handleProceed = () => {
     if (!details.firstName.trim() || !details.lastName.trim() || !details.contactNumber.trim()) {
       setError('Please fill in all required fields.')
+      return
+    }
+    // Philippine mobile number: 11 digits starting with 09 (e.g. 09171234567)
+    const phoneClean = details.contactNumber.replace(/[\s-]/g, '')
+    if (!/^09\d{9}$/.test(phoneClean)) {
+      setError('Please enter a valid mobile number (11 digits, starts with 09). Example: 09171234567')
       return
     }
     setError('')
@@ -124,11 +130,12 @@ export default function HomePage() {
                   <label className="block text-sm font-bold mb-2" style={{ color: '#7B1113' }}>
                     Contact Number *
                   </label>
-                  <input
+              <input
                     value={details.contactNumber}
-                    onChange={e => setDetails({ ...details, contactNumber: e.target.value })}
+                    onChange={e => setDetails({ ...details, contactNumber: e.target.value.replace(/\D/g, '').slice(0, 11) })}
                     className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl text-base focus:outline-none focus:border-red-800 transition"
-                    placeholder="09xx-xxx-xxxx"
+                    placeholder="09171234567"
+                    inputMode="numeric"
                   />
                 </div>
                 <div>

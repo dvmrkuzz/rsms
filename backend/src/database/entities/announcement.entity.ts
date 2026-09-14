@@ -29,6 +29,9 @@ import {
     @Column({ name: 'image_base64', type: 'text', nullable: true })
     imageBase64: string | null;
     
+    @Column({ name: 'image_base64_list', type: 'text', nullable: true })
+    imageBase64List: string | null;
+    
     @Column({
       type: 'enum',
       enum: AnnouncementTarget,

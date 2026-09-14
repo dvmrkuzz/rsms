@@ -64,6 +64,7 @@ export interface Announcement {
   title: string
   content: string
   imageBase64?: string | null
+  imageBase64List?: string | null
   target: 'all' | 'students' | 'staff' | 'kiosk'
   isActive: boolean
   expiresAt?: string

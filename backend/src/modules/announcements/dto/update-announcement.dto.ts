@@ -1,6 +1,6 @@
 import {
     IsString, IsEnum, IsOptional,
-    IsBoolean, IsDateString, MinLength,
+    IsBoolean, IsDateString, MinLength, IsArray,
   } from 'class-validator';
   import { AnnouncementTarget } from '../../../database/entities/announcement.entity';
   
@@ -29,5 +29,10 @@ import {
     @IsOptional()
     @IsString()
     imageBase64?: string;
+
+        @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    imageBase64List?: string[];
     
   }

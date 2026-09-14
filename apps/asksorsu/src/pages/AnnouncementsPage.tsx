@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Megaphone, Clock } from 'lucide-react'
+import { Megaphone, Clock, Search } from 'lucide-react'
 import api from '../lib/api'
 import type { Announcement } from '../types'
 
@@ -18,10 +19,29 @@ const TARGET_COLORS: Record<string, string> = {
 }
 
 export default function AnnouncementsPage() {
+  const [search, setSearch] = useState('')
+
   const { data, isLoading } = useQuery({
     queryKey: ['public-announcements-all'],
     queryFn: () => api.get('/announcements/active').then(r => r.data),
   })
+
+  const filtered = (data ?? []).filter((a: Announcement) => {
+    const q = search.toLowerCase()
+    return (
+      a.title.toLowerCase().includes(q) ||
+      a.content.toLowerCase().includes(q)
+    )
+  })
+
+  const getImages = (a: Announcement): string[] => {
+    const list: string[] = []
+    if (a.imageBase64List) {
+      try { list.push(...JSON.parse(a.imageBase64List)) } catch { /* ignore */ }
+    }
+    if (a.imageBase64) list.push(a.imageBase64)
+    return list
+  }
 
   return (
     <div className="space-y-6">
@@ -42,10 +62,21 @@ export default function AnnouncementsPage() {
         </div>
       </div>
 
+  {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search announcements..."
+          className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-800"
+        />
+      </div>
+
       {/* List */}
       {isLoading ? (
         <div className="text-center py-16 text-gray-400">Loading...</div>
-      ) : !data?.length ? (
+            ) : !filtered.length ? (
         <div className="text-center py-16">
           <Megaphone className="w-12 h-12 text-gray-200 mx-auto mb-3" />
           <p className="text-gray-400">No announcements at this time</p>
@@ -53,7 +84,7 @@ export default function AnnouncementsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {data.map((a: Announcement) => (
+                   {filtered.map((a: Announcement) => (
             <div key={a.id}
               className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition">
               <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -65,10 +96,10 @@ export default function AnnouncementsPage() {
                     </span>
                   </div>
                   <p className="text-sm text-gray-600 leading-relaxed">{a.content}</p>
-                  {a.imageBase64 && (
-                    <img src = {a.imageBase64} alt = {a.title} 
-                  className = "mt-3 rounded-xl border border-gray-100 max-w-full w-full object-contain"/>
-                  )}
+                                    {getImages(a).map((img, i) => (
+                    <img key={i} src={img} alt={a.title}
+                      className="mt-3 rounded-xl border border-gray-100 w-full object-contain" />
+                  ))}
                 </div>
               </div>
               <div className="flex items-center gap-1 mt-4 text-xs text-gray-400">

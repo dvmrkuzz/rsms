@@ -73,13 +73,14 @@ export class AnnouncementsService {
   }
 
   async create(dto: CreateAnnouncementDto, user: User): Promise<Announcement> {
-    const announcement = this.announcementRepository.create({
+        const announcement = this.announcementRepository.create({
       title: dto.title,
       content: dto.content,
       target: dto.target,
       createdById: user.id,
       expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
       imageBase64: dto.imageBase64 ?? null,
+      imageBase64List: dto.imageBase64List ? JSON.stringify(dto.imageBase64List) : null,
     });
     return this.announcementRepository.save(announcement);
   }
@@ -93,6 +94,7 @@ export class AnnouncementsService {
       ...(dto.isActive !== undefined && { isActive: dto.isActive }),
       ...(dto.expiresAt && { expiresAt: new Date(dto.expiresAt) }),
       ...(dto.imageBase64 !== undefined && { imageBase64: dto.imageBase64 }),
+      ...(dto.imageBase64List !== undefined && { imageBase64List: JSON.stringify(dto.imageBase64List) }),
 
     });
     return this.findOne(id);

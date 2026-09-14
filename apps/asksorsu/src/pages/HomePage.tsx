@@ -39,6 +39,14 @@ export default function HomePage() {
     staff: 'Staff',
     kiosk: 'Campus',
   }
+   const getImages = (a: Announcement): string[] => {
+    const list: string[] = []
+    if (a.imageBase64List) {
+      try { list.push(...JSON.parse(a.imageBase64List)) } catch { /* ignore */ }
+    }
+    if (a.imageBase64) list.push(a.imageBase64)
+    return list
+  }
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-10 py-6">
@@ -159,13 +167,10 @@ export default function HomePage() {
                     <p className="text-sm text-gray-600 leading-relaxed">{a.content}</p>
                   </div>
 
-                     {a.imageBase64 && (
-                    <img
-                      src={a.imageBase64}
-                      alt={a.title}
-                      className="mt-4 rounded-xl border border-gray-100 w-full object-contain"
-                    />
-                  )}
+                                      {getImages(a).map((img, i) => (
+                    <img key={i} src={img} alt={a.title}
+                      className="mt-4 rounded-xl border border-gray-100 w-full object-contain" />
+                  ))}
                   
                   {a.expiresAt && (
                     <div className="mt-3 flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg w-fit">

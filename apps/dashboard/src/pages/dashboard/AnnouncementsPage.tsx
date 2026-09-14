@@ -184,7 +184,11 @@ export default function AnnouncementsPage() {
             <div className="flex gap-3 mt-6">
               <button onClick={() => setShowCreate(false)}
                 className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
-              <button onClick={() => create.mutate(form)}
+                            <button onClick={() => create.mutate({
+                ...form,
+                expiresAt: form.expiresAt || undefined,
+                imageBase64: form.imageBase64 || undefined,
+              })}
                 disabled={!form.title || !form.content || create.isPending}
                 className="flex-1 px-4 py-2.5 text-white rounded-lg text-sm disabled:opacity-50"
                 style={{ background: '#7B1113' }}>
