@@ -105,4 +105,10 @@ export class AnnouncementsService {
     await this.announcementRepository.update(id, { isActive: false });
     return { message: 'Announcement deactivated' };
   }
+  
+  async remove(id: string): Promise<{ message: string }> {
+    await this.findOne(id);
+    await this.announcementRepository.delete(id);
+    return { message: 'Announcement deleted' };
+  }
 }

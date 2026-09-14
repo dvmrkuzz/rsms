@@ -18,6 +18,26 @@ const TARGET_COLORS: Record<string, string> = {
   kiosk: 'bg-amber-100 text-amber-700',
 }
 
+function ExpandableText({ text, limit = 300 }: { text: string; limit?: number }) {
+  const [expanded, setExpanded] = useState(false)
+  const isLong = text.length > limit
+  const shown = expanded || !isLong ? text : text.slice(0, limit) + '...'
+  return (
+    <div>
+      <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{shown}</p>
+      {isLong && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-xs font-semibold mt-1 hover:underline"
+          style={{ color: '#7B1113' }}
+        >
+          {expanded ? 'See less' : 'See more'}
+        </button>
+      )}
+    </div>
+  )
+}
+
 export default function AnnouncementsPage() {
   const [search, setSearch] = useState('')
 
@@ -95,7 +115,7 @@ export default function AnnouncementsPage() {
                       {TARGET_LABELS[a.target]}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 leading-relaxed">{a.content}</p>
+                  <ExpandableText text={a.content} />
                                     {getImages(a).map((img, i) => (
                     <img key={i} src={img} alt={a.title}
                       className="mt-3 rounded-xl border border-gray-100 w-full object-contain" />

@@ -1,8 +1,9 @@
 import {
-    Controller, Get, Post, Patch, Body,
+    Controller, Get, Post, Patch, Delete, Body,
     Param, Query, UseGuards, ParseUUIDPipe,
     ParseIntPipe, DefaultValuePipe,
   } from '@nestjs/common';
+
   import { AnnouncementsService } from './announcements.service';
   import { CreateAnnouncementDto, UpdateAnnouncementDto } from './dto';
   import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -64,5 +65,12 @@ import {
     @Roles(UserRole.ADMIN)
     deactivate(@Param('id', ParseUUIDPipe) id: string) {
       return this.announcementsService.deactivate(id);
+    }
+
+    @Delete(':id')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    remove(@Param('id', ParseUUIDPipe) id: string) {
+      return this.announcementsService.remove(id);
     }
   }

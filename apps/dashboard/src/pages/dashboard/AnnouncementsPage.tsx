@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, BellOff, Megaphone } from 'lucide-react'
+import { Plus, BellOff, Megaphone, Trash2 } from 'lucide-react'
 import api from '../../lib/api'
 import PageHeader from '../../components/ui/PageHeader'
 import EmptyState from '../../components/ui/EmptyState'
@@ -16,7 +16,8 @@ const TARGET_COLORS: Record<string, string> = {
 export default function AnnouncementsPage() {
   const queryClient = useQueryClient()
   const [showCreate, setShowCreate] = useState(false)
-  const [form, setForm] = useState({ title: '', content: '', target: 'all', expiresAt: '', imageBase64: '' })
+  const [form, setForm] = useState({ title: '', content: '', target: 'all', expiresAt: '', imageBase64List: [] as string[] })
+  const [imageError, setImageError] = useState('')
 
   const { data, isLoading } = useQuery({
     queryKey: ['announcements'],
@@ -28,37 +29,44 @@ export default function AnnouncementsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['announcements'] })
       setShowCreate(false)
-      setForm({ title: '', content: '', target: 'all', expiresAt: '', imageBase64: '' })
+      setForm({ title: '', content: '', target: 'all', expiresAt: '', imageBase64List: [] })
+      setImageError('')
     },
   })
 
-  const deactivate = useMutation({
+    const deactivate = useMutation({
     mutationFn: (id: string) => api.patch(`/announcements/${id}/deactivate`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['announcements'] }),
   })
 
-   const [imageError, setImageError] = useState('')
+  const remove = useMutation({
+    mutationFn: (id: string) => api.delete(`/announcements/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['announcements'] }),
+  })
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = Array.from(e.target.files ?? [])
+    if (!files.length) return
     setImageError('')
 
-    if (!file.type.startsWith('image/')) {
-      setImageError('Please choose an image file.')
+    if (form.imageBase64List.length + files.length > 4) {
+      setImageError('You can upload up to 4 images.')
       return
     }
-    // ~1MB limit to keep the database lean
-    if (file.size > 1024 * 1024) {
-      setImageError('Image is too large. Please use an image under 1MB.')
-      return
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) { setImageError('Please choose image files only.'); return }
+      if (file.size > 1024 * 1024) { setImageError('Each image must be under 1MB.'); return }
     }
+    files.forEach(file => {
+      const reader = new FileReader()
+      reader.onload = () => setForm(f => ({ ...f, imageBase64List: [...f.imageBase64List, reader.result as string] }))
+      reader.readAsDataURL(file)
+    })
+    e.target.value = ''
+  }
 
-    const reader = new FileReader()
-    reader.onload = () => {
-      setForm(f => ({ ...f, imageBase64: reader.result as string }))
-    }
-    reader.readAsDataURL(file)
+  const removeImage = (i: number) => {
+    setForm(f => ({ ...f, imageBase64List: f.imageBase64List.filter((_, idx) => idx !== i) }))
   }
 
   return (
@@ -108,12 +116,23 @@ export default function AnnouncementsPage() {
                     {a.expiresAt && <span>Expires {new Date(a.expiresAt).toLocaleDateString()}</span>}
                   </div>
                 </div>
-                {a.isActive && (
-                  <button onClick={() => deactivate.mutate(a.id)}
-                    className="flex items-center gap-1 text-gray-400 hover:text-red-500 text-xs shrink-0">
-                    <BellOff className="w-4 h-4" /> Deactivate
+                                <div className="flex items-center gap-3 shrink-0">
+                  {a.isActive && (
+                    <button onClick={() => deactivate.mutate(a.id)}
+                      className="flex items-center gap-1 text-gray-400 hover:text-amber-600 text-xs">
+                      <BellOff className="w-4 h-4" /> Deactivate
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      if (confirm(`Permanently delete "${a.title}"? This cannot be undone.`)) {
+                        remove.mutate(a.id)
+                      }
+                    }}
+                    className="flex items-center gap-1 text-gray-400 hover:text-red-600 text-xs">
+                    <Trash2 className="w-4 h-4" /> Delete
                   </button>
-                )}
+                </div>
               </div>
             </div>
           ))
@@ -123,7 +142,7 @@ export default function AnnouncementsPage() {
       {/* Create Modal */}
       {showCreate && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
             <div className="h-1 w-10 rounded mb-4" style={{ background: '#7B1113' }} />
             <h3 className="font-bold text-gray-800 mb-5">New Announcement</h3>
             <div className="space-y-4">
@@ -156,38 +175,39 @@ export default function AnnouncementsPage() {
                   <input type="date" value={form.expiresAt} onChange={e => setForm({ ...form, expiresAt: e.target.value })}
                     className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-800" />
                 </div>
-                  <div>
-                <label className="block text-sm font-semibold mb-1.5" style={{ color: '#7B1113' }}>Image (optional)</label>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-1.5" style={{ color: '#7B1113' }}>Images (optional, up to 4)</label>
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleImageChange}
                   className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-800 hover:file:bg-red-100"
                 />
                 {imageError && <p className="text-xs text-red-600 mt-1">{imageError}</p>}
-                {form.imageBase64 && (
-                  <div className="mt-2 relative inline-block">
-                    <img src={form.imageBase64} alt="Preview" className="max-h-40 rounded-lg border border-gray-200" />
-                    <button
-                      type="button"
-                      onClick={() => setForm(f => ({ ...f, imageBase64: '' }))}
-                      className="absolute top-1 right-1 bg-white/90 rounded-full px-2 py-0.5 text-xs font-semibold text-red-700 shadow"
-                    >
-                      Remove
-                    </button>
+                {form.imageBase64List.length > 0 && (
+                  <div className="flex gap-2 flex-wrap mt-2">
+                    {form.imageBase64List.map((img, i) => (
+                      <div key={i} className="relative">
+                        <img src={img} alt={`Preview ${i + 1}`} className="h-24 rounded-lg border border-gray-200" />
+                        <button type="button" onClick={() => removeImage(i)}
+                          className="absolute top-1 right-1 bg-white/90 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold text-red-700 shadow">×</button>
+                      </div>
+                    ))}
                   </div>
                 )}
-                <p className="text-xs text-gray-400 mt-1">Max 1MB. Posters/images will show on the public portal.</p>
-              </div>
+                <p className="text-xs text-gray-400 mt-1">Max 4 images, each under 1MB. Hold Ctrl to select multiple.</p>
               </div>
             </div>
             <div className="flex gap-3 mt-6">
               <button onClick={() => setShowCreate(false)}
                 className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
-                            <button onClick={() => create.mutate({
+              <button onClick={() => create.mutate({
                 ...form,
                 expiresAt: form.expiresAt || undefined,
-                imageBase64: form.imageBase64 || undefined,
+                imageBase64List: form.imageBase64List.length ? form.imageBase64List : undefined,
               })}
                 disabled={!form.title || !form.content || create.isPending}
                 className="flex-1 px-4 py-2.5 text-white rounded-lg text-sm disabled:opacity-50"

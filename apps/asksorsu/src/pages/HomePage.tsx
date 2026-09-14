@@ -1,8 +1,30 @@
 import { useQuery } from '@tanstack/react-query'
 import { NavLink } from 'react-router-dom'
 import { Megaphone, Search, ArrowRight, Clock, Pin } from 'lucide-react'
+import { useState } from 'react'
 import api from '../lib/api'
 import type { Announcement } from '../types'
+import ImageGallery from '../components/ImageGallary'
+
+function ExpandableText({ text, limit = 300 }: { text: string; limit?: number }) {
+  const [expanded, setExpanded] = useState(false)
+  const isLong = text.length > limit
+  const shown = expanded || !isLong ? text : text.slice(0, limit) + '...'
+  return (
+    <div>
+      <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{shown}</p>
+      {isLong && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-xs font-semibold mt-1 hover:underline"
+          style={{ color: '#7B1113' }}
+        >
+          {expanded ? 'See less' : 'See more'}
+        </button>
+      )}
+    </div>
+  )
+}
 
 export default function HomePage() {
   const { data: announcements, isLoading } = useQuery({
@@ -164,13 +186,10 @@ export default function HomePage() {
 
                   <div className="mt-4">
                     <h3 className="font-bold text-gray-800 mb-1.5 text-base">{a.title}</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">{a.content}</p>
+                    <ExpandableText text={a.content} />
                   </div>
 
-                                      {getImages(a).map((img, i) => (
-                    <img key={i} src={img} alt={a.title}
-                      className="mt-4 rounded-xl border border-gray-100 w-full object-contain" />
-                  ))}
+                  <ImageGallery images={getImages(a)} alt={a.title} />
                   
                   {a.expiresAt && (
                     <div className="mt-3 flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg w-fit">
