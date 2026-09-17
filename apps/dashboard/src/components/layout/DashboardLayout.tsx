@@ -5,7 +5,6 @@ import { useAuthStore } from '../../store/auth.store'
 import { useDashboardAlerts } from '../../hooks/useDashboardAlerts'
 import ToastStack from '../notifications/ToastStack'
 import logo from '../../assets/logo.png'
-import FeedbackButton from '../FeedBackButton'
 import WhatsNewModal from '../WhatsNewModal'
 
 const dailyTaskNavItems = [
@@ -174,8 +173,6 @@ export default function DashboardLayout() {
           <Outlet />
         </main>
       </div>
-
-      <FeedbackButton />
       <WhatsNewModal />
     </div>
   )
