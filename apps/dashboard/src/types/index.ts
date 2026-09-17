@@ -69,6 +69,8 @@ export interface Announcement {
   expiresAt?: string
   createdAt: string
   createdBy?: Partial<User>
+  imageBase64?: string | null
+  imageBase64List?: string | null
 }
 export interface PaginatedResponse<T> {
   data: T[]

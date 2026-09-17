@@ -31,7 +31,7 @@ import {
     @Column({ unique: true })
     email: string;
 
-        @Column({ name: 'password_hash', type: 'varchar', nullable: true })
+    @Column({ name: 'password_hash', type: 'varchar', nullable: true })
     passwordHash: string | null;
 
     @Column({ name: 'pin_hash', type: 'varchar', nullable: true })

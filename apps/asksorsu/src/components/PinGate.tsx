@@ -8,6 +8,7 @@ const UNLOCK_KEY = 'rsms_pin_unlocked'
 export default function PinGate({ children }: { children: React.ReactNode }) {
   const [unlocked, setUnlocked] = useState(sessionStorage.getItem(UNLOCK_KEY) === 'true')
   const [hasPin, setHasPin] = useState<boolean | null>(null)
+  const [resetMode, setResetMode] = useState(false)
   const [pin, setPin] = useState('')
   const [confirmPin, setConfirmPin] = useState('')
   const [error, setError] = useState('')
@@ -69,7 +70,7 @@ export default function PinGate({ children }: { children: React.ReactNode }) {
           <Lock className="w-7 h-7" style={{ color: '#7B1113' }} />
         </div>
 
-        {hasPin ? (
+        {hasPin && !resetMode ? (
           <>
             <h2 className="font-bold text-gray-800 mb-1">Enter your PIN</h2>
             <p className="text-sm text-gray-500 mb-5">Enter your 6-digit PIN to view this page.</p>
@@ -84,16 +85,26 @@ export default function PinGate({ children }: { children: React.ReactNode }) {
               autoFocus
             />
             {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
-            <button onClick={handleVerify} disabled={busy}
+                        <button onClick={handleVerify} disabled={busy}
               className="w-full mt-4 py-2.5 rounded-lg text-white font-semibold text-sm disabled:opacity-50"
               style={{ background: '#7B1113' }}>
               {busy ? 'Checking...' : 'Unlock'}
             </button>
+            <button
+              onClick={() => { setResetMode(true); setPin(''); setError('') }}
+              className="text-xs text-gray-400 hover:text-gray-600 mt-3"
+            >
+              Forgot PIN?
+            </button>
           </>
         ) : (
           <>
-            <h2 className="font-bold text-gray-800 mb-1">Create your PIN</h2>
-            <p className="text-sm text-gray-500 mb-5">Set a 6-digit PIN to protect your requests and chat.</p>
+                        <h2 className="font-bold text-gray-800 mb-1">{resetMode ? 'Reset your PIN' : 'Create your PIN'}</h2>
+            <p className="text-sm text-gray-500 mb-5">
+              {resetMode
+                ? 'Set a new 6-digit PIN. Since you are signed in with Google, no code is needed.'
+                : 'Set a 6-digit PIN to protect your requests and chat.'}
+            </p>
             <input
               type="password"
               inputMode="numeric"
